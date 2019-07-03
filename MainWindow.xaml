@@ -10,6 +10,7 @@
         Title="DR2 Rallymaster" Height="450" Width="800"
         Closing="MetroWindow_Closing">
 
+    <!-- Creates the "RightWindowCommand" that has the settings cog -->
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Button Name="btnSettings" Click="Button_Click">
@@ -24,8 +25,23 @@
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
     
-    
+    <!-- Main content body-->
     <Grid>
+        <!-- Grid defs -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         
+        <!-- Grid content -->
+        <Button Name="logIn" Grid.Row="0" Grid.Column="0" Click="LogIn_Click">Log Into Racenet</Button>
+        <TextBox Name="clubId" Grid.Row="1" Grid.Column="0"
+                 Controls:TextBoxHelper.Watermark="Club ID"
+                 Controls:TextBoxHelper.ClearTextButton="True" />
+        <Button Name="clubSearch" Grid.Row="1" Grid.Column="1" Click="ClubSearch_Click">Search</Button>
     </Grid>
 </Controls:MetroWindow>

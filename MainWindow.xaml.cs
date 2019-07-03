@@ -3,6 +3,7 @@ using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +23,8 @@ namespace DR2Rallymaster
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        public CookieContainer SharedCookieContainer { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -94,6 +97,19 @@ namespace DR2Rallymaster
         private void ChangeThemeAndAccent(string theme, string accent)
         {
             ThemeManager.ChangeAppStyle(Application.Current, ThemeManager.GetAccent(accent), ThemeManager.GetAppTheme(theme));
+        }
+
+        private void ClubSearch_Click(object sender, RoutedEventArgs e)
+        {
+            var racenetApi = new RacenetApiUtilities(SharedCookieContainer);
+            racenetApi.GetClubInfo(clubId.Text);
+        }
+
+        private void LogIn_Click(object sender, RoutedEventArgs e)
+        {
+            var browserWindow = new BrowserWindow();
+            browserWindow.Owner = Application.Current.MainWindow;
+            browserWindow.Show();
         }
     }
 }
