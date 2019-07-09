@@ -67,11 +67,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BrowserWindow.xaml.cs">
-      <DependentUpon>BrowserWindow.xaml</DependentUpon>
+    <Compile Include="CodiesLoginWindow.xaml.cs">
+      <DependentUpon>CodiesLoginWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\ChampionshipsApiModel.cs" />
+    <Compile Include="Models\ClubApiModel.cs" />
+    <Compile Include="Models\EventsMetadataModel.cs" />
+    <Compile Include="Models\LeaderboardApiModel.cs" />
     <Compile Include="RacenetApiUtilities.cs" />
-    <Page Include="BrowserWindow.xaml">
+    <Page Include="CodiesLoginWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -114,6 +118,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+    <Folder Include="Views\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -24,6 +24,7 @@ namespace DR2Rallymaster
     public partial class MainWindow : MetroWindow
     {
         public CookieContainer SharedCookieContainer { get; set; }
+        private RacenetApiUtilities racenetApi = null;
 
         public MainWindow()
         {
@@ -63,7 +64,7 @@ namespace DR2Rallymaster
             Properties.Settings.Default.Save();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Settings_Click(object sender, RoutedEventArgs e)
         {
             btnSettings.ContextMenu.IsOpen = true;
         }
@@ -101,15 +102,21 @@ namespace DR2Rallymaster
 
         private void ClubSearch_Click(object sender, RoutedEventArgs e)
         {
-            var racenetApi = new RacenetApiUtilities(SharedCookieContainer);
             racenetApi.GetClubInfo(clubId.Text);
         }
 
+        // Display the Codies login window
+        // Once it is closed, the login window will populate the SharedCookieContainer
+        // Use this to create the racenet api utilities object
+        // with the authentication cookies from the login session
         private void LogIn_Click(object sender, RoutedEventArgs e)
         {
-            var browserWindow = new BrowserWindow();
+            var browserWindow = new CodiesLoginWindow();
             browserWindow.Owner = Application.Current.MainWindow;
-            browserWindow.Show();
+            browserWindow.ShowDialog();
+
+            if (SharedCookieContainer != null)
+                racenetApi = new RacenetApiUtilities(SharedCookieContainer);
         }
     }
 }

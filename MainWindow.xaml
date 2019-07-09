@@ -13,7 +13,7 @@
     <!-- Creates the "RightWindowCommand" that has the settings cog -->
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
-            <Button Name="btnSettings" Click="Button_Click">
+            <Button Name="btnSettings" Click="Settings_Click">
                 <Icons:Modern Width="15" Height="15" Kind="Settings" />
                 <Button.ContextMenu>
                     <ContextMenu>
@@ -24,24 +24,50 @@
             </Button>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
-    
+
     <!-- Main content body-->
     <Grid>
-        <!-- Grid defs -->
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+        <!-- Main grid defs, these are intended to have nested panels / controls -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" /> <!-- search bar -->
+            <RowDefinition Height="Auto" /> <!-- championships -->
+            <RowDefinition Height="Auto" /> <!-- events -->
+            <RowDefinition Height="*" />    <!-- row that takes all extra space -->
+            <RowDefinition Height="Auto" /> <!-- bottom row -->
         </Grid.RowDefinitions>
+
+        <!-- search bar -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="5" />
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="1)" FontSize="14" FontWeight="Bold" />
+            <Button Name="logIn" Grid.Row="1" Grid.Column="1" Click="LogIn_Click" Content="Log Into Racenet" />
+
+            <Label Grid.Row="1" Grid.Column="3" Content="2)" FontSize="14" FontWeight="Bold" />
+            <TextBox Name="clubId" Grid.Row="1" Grid.Column="4" VerticalContentAlignment="Center"
+                     Controls:TextBoxHelper.Watermark="Club ID"
+                     Controls:TextBoxHelper.ClearTextButton="True" />
+            <Button Name="clubSearch" Grid.Row="1" Grid.Column="5" Click="ClubSearch_Click" Content="Search for Club" />
+        </Grid>
         
-        <!-- Grid content -->
-        <Button Name="logIn" Grid.Row="0" Grid.Column="0" Click="LogIn_Click">Log Into Racenet</Button>
-        <TextBox Name="clubId" Grid.Row="1" Grid.Column="0"
-                 Controls:TextBoxHelper.Watermark="Club ID"
-                 Controls:TextBoxHelper.ClearTextButton="True" />
-        <Button Name="clubSearch" Grid.Row="1" Grid.Column="1" Click="ClubSearch_Click">Search</Button>
+        <!-- Championships -->
+        
+        <!-- Events -->
+        
+        <!-- Data -->
+        
     </Grid>
 </Controls:MetroWindow>

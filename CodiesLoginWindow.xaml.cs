@@ -1,27 +1,17 @@
 ﻿using MahApps.Metro.Controls;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace DR2Rallymaster
 {
-    /// <summary>
-    /// Interaction logic for BrowserWindow.xaml
-    /// </summary>
-    public partial class BrowserWindow : MetroWindow
+    // Displays a browser window with the Codemasters login page
+    // Once the user logs in and closes the window, grab the authetication
+    // cookies to use in the client we get the rest of the data with
+    public partial class CodiesLoginWindow : MetroWindow
     {
         [DllImport("wininet.dll", SetLastError = true)]
         public static extern bool InternetGetCookieEx(
@@ -34,7 +24,7 @@ namespace DR2Rallymaster
 
         private const Int32 InternetCookieHttponly = 0x2000;
 
-        public BrowserWindow()
+        public CodiesLoginWindow()
         {
             InitializeComponent();
         }
