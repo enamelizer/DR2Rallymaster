@@ -1,4 +1,4 @@
-﻿namespace DR2Rallymaster.Models
+﻿namespace DR2Rallymaster.ApiModels
 {
     // This represents the JSON result returned from the "Club" endpoint
     // Contains information about the club as well as info about the user's permissions

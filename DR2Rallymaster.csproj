@@ -44,6 +44,9 @@
     <Reference Include="MahApps.Metro.IconPacks.Modern, Version=2.3.0.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\MahApps.Metro.IconPacks.Modern.2.3.0\lib\net46\MahApps.Metro.IconPacks.Modern.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -70,11 +73,13 @@
     <Compile Include="CodiesLoginWindow.xaml.cs">
       <DependentUpon>CodiesLoginWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\ChampionshipsApiModel.cs" />
-    <Compile Include="Models\ClubApiModel.cs" />
-    <Compile Include="Models\EventsMetadataModel.cs" />
-    <Compile Include="Models\LeaderboardApiModel.cs" />
-    <Compile Include="RacenetApiUtilities.cs" />
+    <Compile Include="ApiModels\ChampionshipsApiModel.cs" />
+    <Compile Include="ApiModels\ClubApiModel.cs" />
+    <Compile Include="ApiModels\EventsMetadataApiModel.cs" />
+    <Compile Include="ApiModels\LeaderboardApiModel.cs" />
+    <Compile Include="DataModels\ClubInfoModel.cs" />
+    <Compile Include="Services\ClubInfoService.cs" />
+    <Compile Include="Services\RacenetApiUtilities.cs" />
     <Page Include="CodiesLoginWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -119,9 +124,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

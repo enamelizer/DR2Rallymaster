@@ -1,4 +1,4 @@
-﻿namespace DR2Rallymaster.Models
+﻿namespace DR2Rallymaster.ApiModels
 {
     // This represents the JSON result returned for the "recentResults" endpoint
     // Contains information about the recent events and what stages they contain

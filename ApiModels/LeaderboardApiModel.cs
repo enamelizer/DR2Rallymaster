@@ -1,4 +1,4 @@
-﻿namespace DR2Rallymaster.Models
+﻿namespace DR2Rallymaster.ApiModels
 {
     // Represents the JSON result returned from the "Leaderboard" endpoint
     // Contains all the drivers and times for the event

@@ -1,4 +1,5 @@
-﻿using MahApps.Metro;
+﻿using DR2Rallymaster.Services;
+using MahApps.Metro;
 using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -16,6 +18,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+// I started out intending for this to be a pure WPF MVVM app, but after spending
+// far too long learning the framework and far too little time producing meaningful
+// code, I am falling back to my WinForm ways in order to Get Stuff Done.
+// Forgive me, for I have sinned.
+
 namespace DR2Rallymaster
 {
     /// <summary>
@@ -23,8 +30,11 @@ namespace DR2Rallymaster
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        // This gets set when the login window is closed and used in the API calls
         public CookieContainer SharedCookieContainer { get; set; }
-        private RacenetApiUtilities racenetApi = null;
+
+        // The control class for ClubInfo
+        private ClubInfoService clubInfoService = null;
 
         public MainWindow()
         {
@@ -100,9 +110,35 @@ namespace DR2Rallymaster
             ThemeManager.ChangeAppStyle(Application.Current, ThemeManager.GetAccent(accent), ThemeManager.GetAppTheme(theme));
         }
 
-        private void ClubSearch_Click(object sender, RoutedEventArgs e)
+        private async void ClubSearch_Click(object sender, RoutedEventArgs e)
         {
-            racenetApi.GetClubInfo(clubId.Text);
+            if (clubInfoService == null || String.IsNullOrWhiteSpace(clubId.Text))
+            {
+                // TODO error reporting
+                return;
+            }
+
+            // do search
+            searchProgressRing.IsActive = true;
+            var clubInfoModel = await clubInfoService.GetClubInfo(clubId.Text);
+            searchProgressRing.IsActive = false;
+
+            if (clubInfoModel == null)
+            {
+                // TODO error reporting
+            }
+
+            clubNameLabel.Text = clubInfoModel.ClubName;
+            clubDescLabel.Text = clubInfoModel.ClubDesc;
+
+            for(int i=0; i < clubInfoModel.Championships.Length; i++)
+            {
+                var toggleButton = new ToggleButton();
+                var content = String.Format("id: {0} - active: {1}", clubInfoModel.Championships[i].Id, clubInfoModel.Championships[i].IsActive.ToString());
+
+                toggleButton.Content = content;
+                ChampionshipItemControl.Items.Add(toggleButton);
+            }
         }
 
         // Display the Codies login window
@@ -116,7 +152,7 @@ namespace DR2Rallymaster
             browserWindow.ShowDialog();
 
             if (SharedCookieContainer != null)
-                racenetApi = new RacenetApiUtilities(SharedCookieContainer);
+                clubInfoService = new ClubInfoService(SharedCookieContainer);
         }
     }
 }

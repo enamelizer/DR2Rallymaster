@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DR2Rallymaster
+namespace DR2Rallymaster.Services
 {
     class RacenetApiUtilities
     {
@@ -19,12 +19,10 @@ namespace DR2Rallymaster
             httpClient = new HttpClient(httpClientHandler, true);
         }
 
-        // Given a club ID, generate the appropriate URL and fetch the data
+        // Given a club ID, generate the appropriate URL and fetch the club data
         public async Task<Tuple<HttpStatusCode, string>> GetClubInfo(string clubId)
         {
             // example URL https://dirtrally2.com/api/Club/183582
-            // debug
-            clubId = "183582";
 
             var baseUrl = "https://dirtrally2.com/api/Club/";
 
@@ -35,6 +33,22 @@ namespace DR2Rallymaster
             // create URL and query API
             var clubUrl = baseUrl + clubId;
             return await GetStringAsync(clubUrl);
+        }
+
+        // Given a club ID, generate the appropriate URL and get the championship data
+        public async Task<Tuple<HttpStatusCode, string>> GetChampionshipInfo(string clubId)
+        {
+            // example URL https://dirtrally2.com/api/Club/183582/championships
+
+            var baseUrl = "https://dirtrally2.com/api/Club/{0}/championships";
+
+            // no need to make a http call with a known bad club ID
+            if (String.IsNullOrWhiteSpace(clubId))
+                return new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, null);
+
+            // create URL and query API
+            var champUrl = String.Format(baseUrl, clubId);
+            return await GetStringAsync(champUrl);
         }
 
         // Given a URI, send a GET and return the status code and result as a string

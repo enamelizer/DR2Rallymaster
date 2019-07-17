@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
-namespace DR2Rallymaster.Models
+namespace DR2Rallymaster.ApiModels
 {
     // This represents the JSON result returned for the "championships" endpoint
     // Contains information about current, past (and future?) championships
@@ -8,16 +9,13 @@ namespace DR2Rallymaster.Models
     // https://dirtrally2.com/api/Club/183582/championships
     // no params
 
-    public class ChampionshipsApiModel
-    {
-        public ChampionshipMetaData[] ChampionshipMetaData { get; set; }
-    }
-
     public class ChampionshipMetaData
     {
         public string Id { get; set; }
         public string Name { get; set; }
         public bool IsActive { get; set; }
+
+        [JsonProperty("events")]
         public EventMetadata[] Events { get; set; }
     }
 

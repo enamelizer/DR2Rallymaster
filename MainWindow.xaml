@@ -26,48 +26,76 @@
     </Controls:MetroWindow.RightWindowCommands>
 
     <!-- Main content body-->
-    <Grid>
-        <!-- Main grid defs, these are intended to have nested panels / controls -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- search bar -->
-            <RowDefinition Height="Auto" /> <!-- championships -->
-            <RowDefinition Height="Auto" /> <!-- events -->
-            <RowDefinition Height="*" />    <!-- row that takes all extra space -->
-            <RowDefinition Height="Auto" /> <!-- bottom row -->
-        </Grid.RowDefinitions>
-
+    <StackPanel>
         <!-- search bar -->
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="5" />
-            </Grid.RowDefinitions>
-            
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="100" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <GroupBox Header="Login and Search">
+            <Grid Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="5" />
+                </Grid.RowDefinitions>
 
-            <Label Grid.Row="1" Grid.Column="0" Content="1)" FontSize="14" FontWeight="Bold" />
-            <Button Name="logIn" Grid.Row="1" Grid.Column="1" Click="LogIn_Click" Content="Log Into Racenet" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <Label Grid.Row="1" Grid.Column="3" Content="2)" FontSize="14" FontWeight="Bold" />
-            <TextBox Name="clubId" Grid.Row="1" Grid.Column="4" VerticalContentAlignment="Center"
-                     Controls:TextBoxHelper.Watermark="Club ID"
-                     Controls:TextBoxHelper.ClearTextButton="True" />
-            <Button Name="clubSearch" Grid.Row="1" Grid.Column="5" Click="ClubSearch_Click" Content="Search for Club" />
-        </Grid>
-        
-        <!-- Championships -->
-        
-        <!-- Events -->
-        
-        <!-- Data -->
-        
-    </Grid>
+
+                <!-- <TextBlock Grid.Row="1" Grid.Column="0" Text="Step 1)" FontSize="14" VerticalAlignment="Center" />-->
+                <Button Name="logIn" Grid.Row="1" Grid.Column="1" Click="LogIn_Click" Content="Log Into Racenet" Style="{StaticResource SquareButtonStyle}" />
+
+                <!--<TextBlock Grid.Row="1" Grid.Column="3" Text="Step 2)" FontSize="14" VerticalAlignment="Center" />-->
+                <TextBox Name="clubId" Grid.Row="1" Grid.Column="4" VerticalContentAlignment="Center"
+                         Controls:TextBoxHelper.Watermark="Club ID"
+                         Controls:TextBoxHelper.ClearTextButton="True" />
+                <Button Name="clubSearch" Grid.Row="1" Grid.Column="6" Click="ClubSearch_Click" Content="Search for Club" Style="{StaticResource SquareButtonStyle}" />
+                <Controls:ProgressRing Name="searchProgressRing" Grid.Row="1" Grid.Column="8" Width="24" IsActive="False" />
+            </Grid>
+        </GroupBox>
+        <!-- Search result data -->
+        <GroupBox Header="Search Results">
+            <StackPanel>
+                <!-- Club Name -->
+                <TextBlock Name="clubNameLabel" Text="Instructions:" HorizontalAlignment="Center" FontSize="25" />
+                
+                <!-- Club Description -->
+                <TextBlock Name="clubDescLabel" HorizontalAlignment="Center">
+                    1) Log into Racenet using the aptly named "log into racenet" button above <LineBreak />
+                    2) Once logged in, the window will be blank, close the window to pass the authentication info to the app <LineBreak />
+                    3) Search for the Club using the Club ID, these are the digits at the end of the club URL <LineBreak />
+                    &#160;&#160;&#160;&#160;Example: https://dirtrally2.com/clubs/club/183582 is Club ID: 183582
+                </TextBlock>
+
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                <!-- Club Data -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /> <!-- Header -->
+                        <RowDefinition Height="Auto" /> <!-- Content -->
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /> <!-- Championship list -->
+                        <ColumnDefinition Width="*" /> <!-- Event list -->
+                        <ColumnDefinition Width="*" /> <!-- Metadata -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Header -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" FontSize="15" Text="Championships" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" FontSize="15" Text="Events" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" FontSize="15" Text="Info" HorizontalAlignment="Center" />
+                    
+                    <ItemsControl Name="ChampionshipItemControl" Grid.Column="0" Grid.Row="1" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
 </Controls:MetroWindow>
