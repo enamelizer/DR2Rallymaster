@@ -9,8 +9,7 @@ namespace DR2Rallymaster.DataModels
 {
     class ClubInfoModel
     {
-        public string ClubName { get; set; }
-        public string ClubDesc { get; set; }
+        public ClubApiModel ClubInfo { get; set; }
 
         public ChampionshipMetaData[] Championships { get; set; }
     }

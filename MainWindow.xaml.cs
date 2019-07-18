@@ -128,17 +128,180 @@ namespace DR2Rallymaster
                 // TODO error reporting
             }
 
-            clubNameLabel.Text = clubInfoModel.ClubName;
-            clubDescLabel.Text = clubInfoModel.ClubDesc;
+            // clear the UI before populating it
+            ClearUi();
 
-            for(int i=0; i < clubInfoModel.Championships.Length; i++)
+            // populate club title and desc
+            clubNameLabel.Text = clubInfoModel.ClubInfo.Club.Name;
+            clubDescLabel.Text = clubInfoModel.ClubInfo.Club.Description;
+
+
+            // populate club info datagrid (there is a much better way to do it than this, this is so ugly)
+            if (clubInfoModel.ClubInfo != null && clubInfoModel.ClubInfo.Club != null)
             {
-                var toggleButton = new ToggleButton();
-                var content = String.Format("id: {0} - active: {1}", clubInfoModel.Championships[i].Id, clubInfoModel.Championships[i].IsActive.ToString());
+                try
+                {
+                    var club = clubInfoModel.ClubInfo.Club;
+                    //clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("Club Info: ", ""));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("id", club.Id));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("hasActiveChampionship", club.HasActiveChampionship.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("hasFutureChampionship", club.HasFutureChampionship.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("memberCount", club.MemberCount.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("clubAccessType", club.ClubAccessType));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("pendingInvites", clubInfoModel.ClubInfo.PendingInvites.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("", ""));
 
-                toggleButton.Content = content;
-                ChampionshipItemControl.Items.Add(toggleButton);
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("Current User Data: ", ""));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("isMember", club.IsMember.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("role", clubInfoModel.ClubInfo.Role.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("hasAskedToJoin", club.HasBeenInvitedToJoin.ToString()));
+                    clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("hasBeenInvitedToJoin", club.HasBeenInvitedToJoin.ToString()));
+
+                    if (clubInfoModel.ClubInfo.Permissions != null)
+                    {
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canEditClubSettings", clubInfoModel.ClubInfo.Permissions.CanEditClubSettings.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canDisbandClub", clubInfoModel.ClubInfo.Permissions.CanDisbandClub.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canCancelChampionship", clubInfoModel.ClubInfo.Permissions.CanCancelChampionship.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canAcceptOrDenyJoinRequest", clubInfoModel.ClubInfo.Permissions.CanAcceptOrDenyJoinRequest.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canCreateChampionship", clubInfoModel.ClubInfo.Permissions.CanCreateChampionship.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canPromoteToAdmin", clubInfoModel.ClubInfo.Permissions.CanPromoteToAdmin.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canPromoteToOwner", clubInfoModel.ClubInfo.Permissions.CanPromoteToOwner.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canDemoteToAdmin", clubInfoModel.ClubInfo.Permissions.CanDemoteToAdmin.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canDemoteToPlayer", clubInfoModel.ClubInfo.Permissions.CanDemoteToPlayer.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("canKickMember", clubInfoModel.ClubInfo.Permissions.CanKickMember.ToString()));
+                    }
+
+
+                    if (club.MyChampionshipProgress != null)
+                    {
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("", ""));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("Current User Championship Progress:", ""));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("eventCount", club.MyChampionshipProgress.EventCount.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("finishedCount", club.MyChampionshipProgress.FinishedCount.ToString()));
+                        clubInfoDataGrid.Items.Add(new KeyValuePair<string, string>("completedCount", club.MyChampionshipProgress.CompletedCount.ToString()));
+                    }
+
+                    clubInfoTab.IsSelected = true;
+                }
+                catch (Exception exp)
+                {
+                    // TODO error handling, there was probably a null ref error somewhere
+                    //throw;
+                }
             }
+
+            // populate championships list
+            for (int i=0; i < clubInfoModel.Championships.Length; i++)
+            {
+                var championshipId = clubInfoModel.Championships[i].Id;
+                var content = String.Format("id: {0} - active: {1}", championshipId, clubInfoModel.Championships[i].IsActive.ToString());
+                championshipsListBox.Items.Add(new KeyValuePair<string, string>(championshipId, content));
+            }
+        }
+
+        // Called when a championship is selected
+        private void ChampionshipListBox_Selected(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // get the championship ID
+                var championshipId = ((KeyValuePair<string, string>)championshipsListBox.SelectedItem).Key;
+                if (championshipId == null || String.IsNullOrWhiteSpace(championshipId))
+                    return; // TODO error handling
+
+                // clear event listbox and championship info datagird
+                eventsListBox.Items.Clear();
+                championshipInfoDataGrid.Items.Clear();
+
+                // populate championship info datagrid
+                var championshipMetaData = clubInfoService.GetChampionshipMetadata(championshipId);
+                if (championshipMetaData == null)
+                    return; // TODO error handling
+
+                championshipInfoDataGrid.Items.Add(new KeyValuePair<string, string>("id", championshipMetaData.Id));
+                championshipInfoDataGrid.Items.Add(new KeyValuePair<string, string>("name", championshipMetaData.Name));
+                championshipInfoDataGrid.Items.Add(new KeyValuePair<string, string>("isActive", championshipMetaData.IsActive.ToString()));
+                championshipInfoTab.IsSelected = true;
+
+                // populate event listbox
+                var eventsMetadata = championshipMetaData.Events.ToList();
+
+                foreach (var eventMeta in eventsMetadata)
+                {
+                    var eventId = eventMeta.Id;
+                    var content = String.Format("{0} - {1}", eventMeta.CountryName, eventMeta.EventStatus);
+                    eventsListBox.Items.Add(new KeyValuePair<string, string>(eventId, content));
+                }
+            }
+            catch (Exception exp)
+            {
+                // TODO error handling
+                //throw;
+            }
+        }
+
+        private void EventsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                // get the championship ID
+                var championshipId = ((KeyValuePair<string, string>)championshipsListBox.SelectedItem).Key;
+                if (championshipId == null || String.IsNullOrWhiteSpace(championshipId))
+                    return; // TODO error handling
+
+                // get the event ID
+                var eventId = ((KeyValuePair<string, string>)eventsListBox.SelectedItem).Key;
+                if (eventId == null || String.IsNullOrWhiteSpace(eventId))
+                    return; // TODO error handling
+
+                // clear event info datagrid
+                eventInfoDataGrid.Items.Clear();
+
+                // populate event info datagrid
+                var eventMetaData = clubInfoService.GetEventMetadata(championshipId, eventId);
+                if (eventMetaData == null)
+                    return; // TODO error handling
+
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("id", eventMetaData.Id));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("countryId", eventMetaData.CountryId));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("countryName", eventMetaData.CountryName));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("locationId", eventMetaData.LocationId));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("locationName", eventMetaData.LocationName));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("firstStageRouteId", eventMetaData.FirstStageRouteId));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("firstStageConditions", eventMetaData.FirstStageConditions));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("hasParticipated", eventMetaData.HasParticipated.ToString()));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("eventStatus", eventMetaData.EventStatus));
+                eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("eventTime", eventMetaData.EventTime));
+
+                if (eventMetaData.EntryWindow != null)
+                {
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("", ""));
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("entryWindow", "(Times are UTC)"));
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("start", eventMetaData.EntryWindow.Start.ToUniversalTime().ToString()));
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("open", eventMetaData.EntryWindow.Open.ToUniversalTime().ToString()));
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("close", eventMetaData.EntryWindow.Close.ToUniversalTime().ToString()));
+                    eventInfoDataGrid.Items.Add(new KeyValuePair<string, string>("end", eventMetaData.EntryWindow.End.ToUniversalTime().ToString()));
+                }
+
+                eventInfoTab.IsSelected = true;
+            }
+            catch(Exception exp)
+            {
+                // TODO error handling
+                //throw;
+            }
+        }
+
+        // Clears all UI elements
+        private void ClearUi()
+        {
+            clubNameLabel.Text = "";
+            clubDescLabel.Text = "";
+            championshipsListBox.Items.Clear();
+            eventsListBox.Items.Clear();
+            clubInfoDataGrid.Items.Clear();
+            championshipInfoDataGrid.Items.Clear();
+            eventInfoDataGrid.Items.Clear();
         }
 
         // Display the Codies login window

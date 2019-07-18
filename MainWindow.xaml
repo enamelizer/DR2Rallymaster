@@ -7,7 +7,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:Icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Modern"
         mc:Ignorable="d"
-        Title="DR2 Rallymaster" Height="450" Width="800"
+        Title="DR2 Rallymaster" Height="600" MinHeight="600" Width="800" SizeToContent="Height"
         Closing="MetroWindow_Closing">
 
     <!-- Creates the "RightWindowCommand" that has the settings cog -->
@@ -28,44 +28,42 @@
     <!-- Main content body-->
     <StackPanel>
         <!-- search bar -->
-        <GroupBox Header="Login and Search">
-            <Grid Grid.Row="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="5" />
-                    <RowDefinition Height="28" />
-                    <RowDefinition Height="5" />
-                </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="28" />
+                <RowDefinition Height="5" />
+            </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="20" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
 
-                <!-- <TextBlock Grid.Row="1" Grid.Column="0" Text="Step 1)" FontSize="14" VerticalAlignment="Center" />-->
-                <Button Name="logIn" Grid.Row="1" Grid.Column="1" Click="LogIn_Click" Content="Log Into Racenet" Style="{StaticResource SquareButtonStyle}" />
+            <!-- <TextBlock Grid.Row="1" Grid.Column="0" Text="Step 1)" FontSize="14" VerticalAlignment="Center" />-->
+            <Button Name="logIn" Grid.Row="1" Grid.Column="1" Click="LogIn_Click" Content="Log Into Racenet" Style="{StaticResource SquareButtonStyle}" />
 
-                <!--<TextBlock Grid.Row="1" Grid.Column="3" Text="Step 2)" FontSize="14" VerticalAlignment="Center" />-->
-                <TextBox Name="clubId" Grid.Row="1" Grid.Column="4" VerticalContentAlignment="Center"
+            <!--<TextBlock Grid.Row="1" Grid.Column="3" Text="Step 2)" FontSize="14" VerticalAlignment="Center" />-->
+            <TextBox Name="clubId" Grid.Row="1" Grid.Column="4" VerticalContentAlignment="Center"
                          Controls:TextBoxHelper.Watermark="Club ID"
                          Controls:TextBoxHelper.ClearTextButton="True" />
-                <Button Name="clubSearch" Grid.Row="1" Grid.Column="6" Click="ClubSearch_Click" Content="Search for Club" Style="{StaticResource SquareButtonStyle}" />
-                <Controls:ProgressRing Name="searchProgressRing" Grid.Row="1" Grid.Column="8" Width="24" IsActive="False" />
-            </Grid>
-        </GroupBox>
+            <Button Name="clubSearch" Grid.Row="1" Grid.Column="6" Click="ClubSearch_Click" Content="Search for Club" Style="{StaticResource SquareButtonStyle}" />
+            <Controls:ProgressRing Name="searchProgressRing" Grid.Row="1" Grid.Column="8" Width="24" IsActive="False" />
+        </Grid>
         <!-- Search result data -->
-        <GroupBox Header="Search Results">
+        <GroupBox Header="Club Info">
             <StackPanel>
                 <!-- Club Name -->
                 <TextBlock Name="clubNameLabel" Text="Instructions:" HorizontalAlignment="Center" FontSize="25" />
-                
+
                 <!-- Club Description -->
                 <TextBlock Name="clubDescLabel" HorizontalAlignment="Center">
                     1) Log into Racenet using the aptly named "log into racenet" button above <LineBreak />
@@ -73,29 +71,85 @@
                     3) Search for the Club using the Club ID, these are the digits at the end of the club URL <LineBreak />
                     &#160;&#160;&#160;&#160;Example: https://dirtrally2.com/clubs/club/183582 is Club ID: 183582
                 </TextBlock>
-
-                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-
-                <!-- Club Data -->
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" /> <!-- Header -->
-                        <RowDefinition Height="Auto" /> <!-- Content -->
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" /> <!-- Championship list -->
-                        <ColumnDefinition Width="*" /> <!-- Event list -->
-                        <ColumnDefinition Width="*" /> <!-- Metadata -->
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Header -->
-                    <TextBlock Grid.Row="0" Grid.Column="0" FontSize="15" Text="Championships" HorizontalAlignment="Center" />
-                    <TextBlock Grid.Row="0" Grid.Column="1" FontSize="15" Text="Events" HorizontalAlignment="Center" />
-                    <TextBlock Grid.Row="0" Grid.Column="2" FontSize="15" Text="Info" HorizontalAlignment="Center" />
-                    
-                    <ItemsControl Name="ChampionshipItemControl" Grid.Column="0" Grid.Row="1" />
-                </Grid>
             </StackPanel>
         </GroupBox>
+
+
+        <!-- Club Data -->
+        <GroupBox Header="Current Club Data">
+            <Grid Name="resultsGrid" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <!-- Header -->
+                    <RowDefinition Height="*" />
+                    <!-- Content -->
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <!-- Championship list -->
+                    <ColumnDefinition Width="200" />
+                    <!-- Event list -->
+                    <ColumnDefinition Width="*" />
+                    <!-- Metadata -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Header -->
+                <TextBlock Grid.Row="0" Grid.Column="0" FontSize="15" Text="Championships" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                <TextBlock Grid.Row="0" Grid.Column="1" FontSize="15" Text="Events" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                <!-- <TextBlock Grid.Row="0" Grid.Column="2" FontSize="15" Text="Info" HorizontalAlignment="Center" />-->
+
+                <!-- Championships -->
+                <ListBox Name="championshipsListBox" Grid.Column="0" Grid.Row="1" BorderThickness="0"  VerticalAlignment="Stretch" SelectionChanged="ChampionshipListBox_Selected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Value}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Events -->
+                <ListBox Name="eventsListBox" Grid.Column="1" Grid.Row="1" BorderThickness="0" VerticalAlignment="Stretch" SelectionChanged="EventsListBox_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Value}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Info Panel -->
+                <TabControl Grid.Column="2" Grid.Row="0" Grid.RowSpan="2">
+                    <TabControl.Resources>
+                        <Style TargetType="{x:Type TabPanel}">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </TabControl.Resources>
+                    <TabItem Name="clubInfoTab" Header="Club Info" Controls:ControlsHelper.HeaderFontSize="15">
+                        <DataGrid Name="clubInfoDataGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" HorizontalAlignment="Center" MinRowHeight="18" RowHeight="18" MaxHeight="500" VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Key}" />
+                                <DataGridTextColumn Binding="{Binding Value}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Name="championshipInfoTab" Header="Championship Info" Controls:ControlsHelper.HeaderFontSize="15" >
+                        <DataGrid Name="championshipInfoDataGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" HorizontalAlignment="Center" MinRowHeight="18" RowHeight="18" MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Key}" />
+                                <DataGridTextColumn Binding="{Binding Value}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Name="eventInfoTab" Header="Event Info" Controls:ControlsHelper.HeaderFontSize="15" >
+                        <DataGrid Name="eventInfoDataGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" HorizontalAlignment="Center" MinRowHeight="18" RowHeight="18" MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Key}" />
+                                <DataGridTextColumn Binding="{Binding Value}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </GroupBox>
+
     </StackPanel>
 </Controls:MetroWindow>
