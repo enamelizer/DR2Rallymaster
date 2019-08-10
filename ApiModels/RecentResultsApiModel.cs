@@ -15,10 +15,10 @@
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public Events[] Events { get; set; }
+        public Event[] Events { get; set; }
     }
 
-    public class Events
+    public class Event
     {
         public string Id { get; set; }
         public string ChallengeId { get; set; }

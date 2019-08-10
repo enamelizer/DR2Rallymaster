@@ -242,6 +242,10 @@ namespace DR2Rallymaster
 
         private void EventsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // if there is no selected event, exit
+            if (championshipsListBox.SelectedItem == null || eventsListBox.SelectedItem == null)
+                return;
+
             try
             {
                 // get the championship ID
@@ -290,6 +294,25 @@ namespace DR2Rallymaster
                 // TODO error handling
                 //throw;
             }
+        }
+
+        private async void GetStageResults_Click(object sender, RoutedEventArgs e)
+        {
+            // if there is no selected event, exit
+            if (championshipsListBox.SelectedItem == null || eventsListBox.SelectedItem == null)
+                return;
+
+            // get the championship ID
+            var championshipId = ((KeyValuePair<string, string>)championshipsListBox.SelectedItem).Key;
+            if (championshipId == null || String.IsNullOrWhiteSpace(championshipId))
+                return; // TODO error handling
+
+            // get the event ID
+            var eventId = ((KeyValuePair<string, string>)eventsListBox.SelectedItem).Key;
+            if (eventId == null || String.IsNullOrWhiteSpace(eventId))
+                return; // TODO error handling
+
+            await clubInfoService.SaveStageDataToCsv(championshipId, eventId, null);
         }
 
         // Clears all UI elements

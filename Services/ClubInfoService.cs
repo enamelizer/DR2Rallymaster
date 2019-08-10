@@ -34,23 +34,33 @@ namespace DR2Rallymaster.Services
             {
                 var returnModel = new ClubInfoModel();
 
-                // first get club data
+                // get club data
                 var racenetClubResult = await racenetApi.GetClubInfo(clubId);
-                if (racenetClubResult.Item1 != HttpStatusCode.OK || String.IsNullOrEmpty(racenetClubResult.Item2))
+                if (racenetClubResult.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(racenetClubResult.Item2))
                     return null; // TODO error handling
 
                 var apiClubModel = JsonConvert.DeserializeObject<ClubApiModel>(racenetClubResult.Item2);
                 if (apiClubModel != null)
                     returnModel.ClubInfo = apiClubModel;
 
-                // now get championship data
+                // get championship data
                 var racenetChampionshipsResult = await racenetApi.GetChampionshipInfo(clubId);
-                if (racenetChampionshipsResult.Item1 != HttpStatusCode.OK || String.IsNullOrEmpty(racenetChampionshipsResult.Item2))
+                if (racenetChampionshipsResult.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(racenetChampionshipsResult.Item2))
                     return null; // TODO error handling
 
                 var apiChampionshipsModel = JsonConvert.DeserializeObject<ChampionshipMetaData[]>(racenetChampionshipsResult.Item2);
                 if (racenetChampionshipsResult != null)
                     returnModel.Championships = apiChampionshipsModel;
+
+                // get recent results
+                var racenetRecentResultsResult = await racenetApi.GetRecentResults(clubId);
+                if (racenetRecentResultsResult.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(racenetRecentResultsResult.Item2))
+                    return null; // TODO error handling
+
+                var recentResultsApiModel = JsonConvert.DeserializeObject<RecentResultsApiModel>(racenetRecentResultsResult.Item2);
+                if (recentResultsApiModel != null)
+                    returnModel.RecentResults = recentResultsApiModel;
+
 
                 // cache the data
                 clubInfoCache = returnModel;
@@ -98,6 +108,45 @@ namespace DR2Rallymaster.Services
             }
 
             return null;   // TODO error handling?
+        }
+
+        // Given a championship ID, event ID, and a file path:
+        // Fetch all the stage data for the event
+        // convert the stage data to CSV
+        // save the data to disk
+        public async Task SaveStageDataToCsv(string championshipId, string eventId, string filePath)
+        {
+            if (clubInfoCache == null)
+                return;   // TODO error handling?
+
+
+            Event eventToOutput = null;
+            for (int i = 0; i < clubInfoCache.RecentResults.Championships.Length; i++)
+            {
+                if (clubInfoCache.Championships[i].Id == championshipId)
+                {
+                    var championship = clubInfoCache.RecentResults.Championships[i];
+                    for (int j = 0; j < championship.Events.Length; j++)
+                    {
+                        if (championship.Events[j].ChallengeId == eventId)
+                        {
+                            eventToOutput = championship.Events[j];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // if we have found our event, get the stages from it
+            if (eventToOutput == null)
+                return;
+
+
+            var responses = new List<object>();
+            for (int i = 0; i < eventToOutput.Stages.Length; i++)
+            {
+                responses.Add(racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
+            }
         }
     }
 }

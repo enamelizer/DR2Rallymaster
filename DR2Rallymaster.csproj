@@ -75,7 +75,7 @@
     </Compile>
     <Compile Include="ApiModels\ChampionshipsApiModel.cs" />
     <Compile Include="ApiModels\ClubApiModel.cs" />
-    <Compile Include="ApiModels\EventsMetadataApiModel.cs" />
+    <Compile Include="ApiModels\RecentResultsApiModel.cs" />
     <Compile Include="ApiModels\LeaderboardApiModel.cs" />
     <Compile Include="DataModels\ClubInfoModel.cs" />
     <Compile Include="Services\ClubInfoService.cs" />

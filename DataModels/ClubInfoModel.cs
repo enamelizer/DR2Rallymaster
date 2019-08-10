@@ -12,5 +12,7 @@ namespace DR2Rallymaster.DataModels
         public ClubApiModel ClubInfo { get; set; }
 
         public ChampionshipMetaData[] Championships { get; set; }
+
+        public RecentResultsApiModel RecentResults { get; set; }
     }
 }
