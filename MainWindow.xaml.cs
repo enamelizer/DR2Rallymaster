@@ -313,6 +313,8 @@ namespace DR2Rallymaster
                 return; // TODO error handling
 
             await clubInfoService.SaveStageDataToCsv(championshipId, eventId, null);
+
+            // TODO: we should show progress while fetching data
         }
 
         // Clears all UI elements
@@ -333,12 +335,17 @@ namespace DR2Rallymaster
         // with the authentication cookies from the login session
         private void LogIn_Click(object sender, RoutedEventArgs e)
         {
+            // clear cookie container
+            SharedCookieContainer = null;
+
             var browserWindow = new CodiesLoginWindow();
             browserWindow.Owner = Application.Current.MainWindow;
             browserWindow.ShowDialog();
 
             if (SharedCookieContainer != null)
                 clubInfoService = new ClubInfoService(SharedCookieContainer);
+
+            // TODO: we should wait for the GetInitialState call to allow the user to proceed
         }
     }
 }

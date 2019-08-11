@@ -79,5 +79,14 @@ namespace DR2Rallymaster
 
             activeX.Silent = true;
         }
+
+        private void RacenetLoginBrowser_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine(e.Uri);
+
+            if (e.Uri.ToString() == "https://dirtrally2.com/clubs/")
+                this.Close();
+
+        }
     }
 }

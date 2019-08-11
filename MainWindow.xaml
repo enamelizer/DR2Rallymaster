@@ -67,7 +67,7 @@
                 <!-- Club Description -->
                 <TextBlock Name="clubDescLabel" HorizontalAlignment="Center">
                     1) Log into Racenet using the aptly named "log into racenet" button above <LineBreak />
-                    2) Once logged in, the window will be blank, close the window to pass the authentication info to the app <LineBreak />
+                    2) Wait for authentication to be setup in the tool <LineBreak />
                     3) Search for the Club using the Club ID, these are the digits at the end of the club URL <LineBreak />
                     &#160;&#160;&#160;&#160;Example: https://dirtrally2.com/clubs/club/183582 is Club ID: 183582
                 </TextBlock>

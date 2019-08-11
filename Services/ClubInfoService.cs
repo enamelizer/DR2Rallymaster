@@ -24,6 +24,7 @@ namespace DR2Rallymaster.Services
         public ClubInfoService(CookieContainer cookieContainer)
         {
             racenetApi = new RacenetApiUtilities(cookieContainer);
+            var apiInitialized = racenetApi.GetInitialState();      // TODO: if this fails, we fail (dramatic music)
         }
 
         // Gets the club info from the racenet service, deserializes the json,
@@ -145,7 +146,7 @@ namespace DR2Rallymaster.Services
             var responses = new List<object>();
             for (int i = 0; i < eventToOutput.Stages.Length; i++)
             {
-                responses.Add(racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
+                responses.Add(await racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
             }
         }
     }

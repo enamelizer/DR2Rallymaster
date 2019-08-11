@@ -11,6 +11,7 @@
         Closing="MetroWindow_Closing">
     <WebBrowser
         Name="racenetLoginBrowser"
-        Source="https://dirtrally2.com/account/login?returnUri=%2F"
-        Navigating="RacenetLoginBrowser_Navigating"/>
+        Source="https://dirtrally2.com/account/login?returnUri=%2Fclubs%2F"
+        Navigating="RacenetLoginBrowser_Navigating"
+        Navigated="RacenetLoginBrowser_Navigated"/>
 </Controls:MetroWindow>
