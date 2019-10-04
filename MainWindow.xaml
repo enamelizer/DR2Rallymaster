@@ -152,7 +152,7 @@
         </GroupBox>
 
         <!-- Buttons to download results -->
-        <Button Name="getStageResults" Click="GetStageResults_Click" Content="Get Stage Results" Width="200" VerticalAlignment="Center" Style="{StaticResource SquareButtonStyle}" />
+        <Button Name="getStageResults" Click="GetStageResults_Click" Content="Export Stage Results" Width="200" VerticalAlignment="Center" Style="{StaticResource SquareButtonStyle}" />
 
     </StackPanel>
 </Controls:MetroWindow>
