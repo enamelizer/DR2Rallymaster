@@ -45,6 +45,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
 
@@ -57,6 +58,7 @@
                          Controls:TextBoxHelper.ClearTextButton="True" />
             <Button Name="clubSearch" Grid.Row="1" Grid.Column="6" Click="ClubSearch_Click" Content="Search for Club" Style="{StaticResource SquareButtonStyle}" />
             <Controls:ProgressRing Name="searchProgressRing" Grid.Row="1" Grid.Column="8" Width="24" IsActive="False" />
+            <TextBlock x:Name="statusLabel" Grid.Row="1" Grid.Column="9" Text="fetching data from racenet..." VerticalAlignment="Bottom" Visibility="Hidden" />
         </Grid>
         <!-- Search result data -->
         <GroupBox Header="Club Info">
@@ -152,7 +154,7 @@
         </GroupBox>
 
         <!-- Buttons to download results -->
-        <Button Name="getStageResults" Click="GetStageResults_Click" Content="Export Stage Results" Width="200" VerticalAlignment="Center" Style="{StaticResource SquareButtonStyle}" />
+        <Button Name="btnGetStageResults" Click="GetStageResults_Click" Content="Export Stage Results" Width="200" VerticalAlignment="Center" Visibility="Hidden" Style="{StaticResource SquareButtonStyle}" />
 
     </StackPanel>
 </Controls:MetroWindow>

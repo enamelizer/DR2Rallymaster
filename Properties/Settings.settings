@@ -8,5 +8,8 @@
     <Setting Name="Accent" Type="System.String" Scope="User">
       <Value Profile="(Default)">Green</Value>
     </Setting>
+    <Setting Name="LastSelectedExportPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

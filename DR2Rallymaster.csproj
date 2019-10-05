@@ -78,6 +78,7 @@
     <Compile Include="ApiModels\RecentResultsApiModel.cs" />
     <Compile Include="ApiModels\LeaderboardApiModel.cs" />
     <Compile Include="DataModels\ClubInfoModel.cs" />
+    <Compile Include="Services\DRTimeCruncher.cs" />
     <Compile Include="Services\ClubInfoService.cs" />
     <Compile Include="Services\RacenetApiUtilities.cs" />
     <Page Include="CodiesLoginWindow.xaml">

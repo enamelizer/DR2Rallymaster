@@ -1,6 +1,7 @@
 ﻿using DR2Rallymaster.Services;
 using MahApps.Metro;
 using MahApps.Metro.Controls;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -120,8 +121,12 @@ namespace DR2Rallymaster
 
             // do search
             searchProgressRing.IsActive = true;
+            statusLabel.Visibility = Visibility.Visible;
+
             var clubInfoModel = await clubInfoService.GetClubInfo(clubId.Text);
+
             searchProgressRing.IsActive = false;
+            statusLabel.Visibility = Visibility.Hidden;
 
             if (clubInfoModel == null)
             {
@@ -204,6 +209,9 @@ namespace DR2Rallymaster
         {
             try
             {
+                // disable the export button
+                btnGetStageResults.Visibility = Visibility.Hidden;
+
                 // get the championship ID
                 var championshipId = ((KeyValuePair<string, string>)championshipsListBox.SelectedItem).Key;
                 if (championshipId == null || String.IsNullOrWhiteSpace(championshipId))
@@ -288,6 +296,9 @@ namespace DR2Rallymaster
                 }
 
                 eventInfoTab.IsSelected = true;
+
+                // enable the export button
+                btnGetStageResults.Visibility = Visibility.Visible;
             }
             catch(Exception exp)
             {
@@ -312,9 +323,32 @@ namespace DR2Rallymaster
             if (eventId == null || String.IsNullOrWhiteSpace(eventId))
                 return; // TODO error handling
 
-            await clubInfoService.SaveStageDataToCsv(championshipId, eventId, null);
+            // restore the last selected path
+            var lastSelectedExportPath = Properties.Settings.Default["LastSelectedExportPath"] as string;
+            if (string.IsNullOrWhiteSpace(lastSelectedExportPath))
+                lastSelectedExportPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-            // TODO: we should show progress while fetching data
+            // ask the user where to save
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = lastSelectedExportPath;
+            saveFileDialog.Filter = "csv files (*.csv)|*.csv";
+            saveFileDialog.FilterIndex = 2;
+            saveFileDialog.RestoreDirectory = true;
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                searchProgressRing.IsActive = true;
+                statusLabel.Visibility = Visibility.Visible;
+
+                await clubInfoService.SaveStageDataToCsv(championshipId, eventId, saveFileDialog.FileName);
+
+                searchProgressRing.IsActive = false;
+                statusLabel.Visibility = Visibility.Hidden;
+
+                // save the last selected path
+                Properties.Settings.Default["LastSelectedExportPath"] = System.IO.Path.GetDirectoryName(saveFileDialog.FileName);
+                Properties.Settings.Default.Save();
+            }
         }
 
         // Clears all UI elements
@@ -346,6 +380,7 @@ namespace DR2Rallymaster
                 clubInfoService = new ClubInfoService(SharedCookieContainer);
 
             // TODO: we should wait for the GetInitialState call to allow the user to proceed
+            // TODO show indication that user is logged in
         }
     }
 }
