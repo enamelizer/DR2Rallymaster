@@ -26,46 +26,72 @@ namespace DR2Rallymaster.Services
             return true;
         }
 
-        public bool CalculateTimes()
+        public bool ProcessResults()
         {
             if (stages.Count < 1)
                 return true;
 
-			// create lookup tables for comparing times
-            var previousStage = new Dictionary<string, DriverTime>();
-            var currentStage = new Dictionary<string, DriverTime>();
+            // create lookup tables for comparing times
+            var initialStageTimes = new Dictionary<string, DriverTime>();
+            var previousStageTimes = new Dictionary<string, DriverTime>();
+            var currentStageTimes = new Dictionary<string, DriverTime>();
 
-			previousStage = stages[0].DriverTimes;
+            // the first stage times, this is used as the master entry list (if someone alt+f4s on stage 1, what happens?)
+            initialStageTimes = stages[0].DriverTimes;
 
-			CalculateDeltas(stages[0], true);
+            // the "previous" stage's inital value is the first stage
+            previousStageTimes = stages[0].DriverTimes;
+
+            CalculateDeltas(stages[0], true);
 
 			// for each stage after SS1
 			for (int i = 1; i < stages.Count; i++)
 			{
-				currentStage = stages[i].DriverTimes;
+				currentStageTimes = stages[i].DriverTimes;
 
-				// for each driver on the previous stage
-				foreach (KeyValuePair<string,DriverTime> previousDriverTimeKvp in previousStage)
-				{
-					// get the current time and compute the stage time and position change
-					DriverTime currentDriverTime;
-					if (true == currentStage.TryGetValue(previousDriverTimeKvp.Key, out currentDriverTime))
-					{
-                        // in DR2.0 a driver can alt+F4 when they crash and continue a rally
-                        // in this case, they will not have a previous time
-                        if (currentDriverTime != null && previousDriverTimeKvp.Value != null)
-						{
-							currentDriverTime.CalculatedStageTime = currentDriverTime.CalculatedOverallTime - previousDriverTimeKvp.Value.CalculatedOverallTime;
-							currentDriverTime.CalculatedPositionChange = previousDriverTimeKvp.Value.OverallPosition - currentDriverTime.OverallPosition;
-						}
-					}
-					else
-					{
-						currentStage.Add(previousDriverTimeKvp.Key, null); // track DNFs
-					}
-				}
+                // if a driver's PC crashes or they alt+f4, they will not score a stage time
+                // and they will not show up as DNF, but will continue on
+                // go thru all results and add zero times as needed
 
-				previousStage = currentStage;
+                // for each driver that started the rally
+                foreach (var driver in initialStageTimes.Keys)
+                {
+                    // get the driver time for the previous and current stage
+                    DriverTime currentDriverTime;
+                    DriverTime previousDriverTime;
+                    var hasCurrentDriverTime = currentStageTimes.TryGetValue(driver, out currentDriverTime);
+                    var hasPreviousDriverTime = previousStageTimes.TryGetValue(driver, out previousDriverTime);
+
+                    // if the driver does not have a current stage, create a DNF entry for them
+                    if (!hasCurrentDriverTime)
+                    {
+                        var driverEntry = initialStageTimes[driver];
+                        var dnfEntry = new DriverTime()
+                        {
+                            IsDnf = true,
+                            DriverName = driverEntry.DriverName,
+                            Vehicle = driverEntry.Vehicle
+                        };
+
+                        currentStageTimes.Add(driver, dnfEntry);
+                    }
+
+                    // if the driver has a current stage, but not a previous stage, mark the current stage as DNF
+                    else if (hasCurrentDriverTime && !hasPreviousDriverTime)
+                        currentDriverTime.IsDnf = true;
+
+                    // the driver has a current stage and a previous stage, do stuff
+                    else if (hasCurrentDriverTime && hasPreviousDriverTime)
+                    {
+                        if (previousDriverTime.IsDnf)
+                            currentDriverTime.IsDnf = true;
+
+                        if (!previousDriverTime.IsDnf || !currentDriverTime.IsDnf)
+                            currentDriverTime.PositionChange = previousDriverTime.OverallPosition - currentDriverTime.OverallPosition;
+                    }
+                }
+
+				previousStageTimes = currentStageTimes;
 
 				CalculateDeltas(stages[i], false);
 			}
@@ -82,22 +108,23 @@ namespace DR2Rallymaster.Services
             TimeSpan previousStageTime = new TimeSpan();
             bool firstDriverProcessed = false;
 
-            foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.CalculatedOverallTime))
+            foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.OverallTime))
 			{
 				if (driverTime == null)
 					continue;
 
+                // if this is a DNF stage, skip it
+                if (driverTime.IsDnf)
+                    continue;
+
 				if (driverTime.OverallPosition == 1)
 				{
-					fastestOverallTime = driverTime.CalculatedOverallTime;
-					previousOverallTime = driverTime.CalculatedOverallTime;
+					fastestOverallTime = driverTime.OverallTime;
+					previousOverallTime = driverTime.OverallTime;
                     firstDriverProcessed = true;
 
 					if (isFirstStage == true)
-					{
-						driverTime.CaclulatedStagePosition = driverTime.OverallPosition;
-						driverTime.CalculatedStageTime = driverTime.CalculatedOverallTime;
-					}
+						driverTime.StagePosition = driverTime.OverallPosition;
 
 					continue;
 				}
@@ -107,18 +134,15 @@ namespace DR2Rallymaster.Services
                 if (firstDriverProcessed == false)
                     return;
 
-				driverTime.CalculatedOverallDiffFirst = driverTime.CalculatedOverallTime - fastestOverallTime;
-				driverTime.CalculatedOverallDiffPrevious = driverTime.CalculatedOverallTime - previousOverallTime;
+				driverTime.OverallDiffPrevious = driverTime.OverallTime - previousOverallTime;
 
 				if (isFirstStage == true)
 				{
-					driverTime.CaclulatedStagePosition = driverTime.OverallPosition;
-					driverTime.CalculatedStageTime = driverTime.CalculatedOverallTime;
-					driverTime.CalculatedStageDiffFirst = driverTime.CalculatedOverallDiffFirst;
-					driverTime.CalculatedStageDiffPrevious = driverTime.CalculatedOverallDiffPrevious;
+					driverTime.StagePosition = driverTime.OverallPosition;
+					driverTime.StageDiffPrevious = driverTime.StageDiffPrevious;
 				}
 
-				previousOverallTime = driverTime.CalculatedOverallTime;
+				previousOverallTime = driverTime.OverallTime;
 			}
 
             // reset error flag for reuse
@@ -128,18 +152,17 @@ namespace DR2Rallymaster.Services
             if (isFirstStage == false)  // skip for the first stage, there is no stage delta to calculate
 			{
 				int stagePosition = 1;
-				foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.CalculatedStageTime))
+				foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.StageTime))
 				{
-					if (driverTime == null)
-					{
-						stagePosition++;
+                    // skip DNF entries
+					if (driverTime.IsDnf)
 						continue;
-					}
+
 					if (stagePosition == 1)
 					{
-						fastestStageTime = driverTime.CalculatedStageTime;
-						previousStageTime = driverTime.CalculatedStageTime;
-						driverTime.CaclulatedStagePosition = stagePosition;
+						fastestStageTime = driverTime.StageTime;
+						previousStageTime = driverTime.StageTime;
+						driverTime.StagePosition = stagePosition;
 						stagePosition++;
                         firstDriverProcessed = true;
                         continue;
@@ -150,10 +173,9 @@ namespace DR2Rallymaster.Services
                     if (firstDriverProcessed == false)
                         return;
 
-                    driverTime.CalculatedStageDiffFirst = driverTime.CalculatedStageTime - fastestStageTime;
-					driverTime.CalculatedStageDiffPrevious = driverTime.CalculatedStageTime - previousStageTime;
-					driverTime.CaclulatedStagePosition = stagePosition;
-					previousStageTime = driverTime.CalculatedStageTime;
+					driverTime.StageDiffPrevious = driverTime.StageTime - previousStageTime;
+					driverTime.StagePosition = stagePosition;
+					previousStageTime = driverTime.StageTime;
 					stagePosition++;
 				}
 			}
@@ -204,50 +226,19 @@ namespace DR2Rallymaster.Services
     /// </summary>
     public class DriverTime
     {
-        // raw data supplied by parser
-        public int OverallPosition { get; private set; }
-        public string Tags { get; private set; }
-        public int PlayerID { get; private set; }
-        public string DriverName { get; private set; }
-        public string Vehicle { get; private set; }
-        public string OverallTime { get; private set; }
-        public string OverallDiffFirst { get; private set; }
+        public bool IsDnf { get; set; }
+        public int OverallPosition { get; set; }
+        public string DriverName { get; set; }
+        public string Vehicle { get; set; }
+        public TimeSpan OverallTime { get; set; }
+		public TimeSpan OverallDiffPrevious { get; set; }
+		public TimeSpan OverallDiffFirst { get; set; }
+		public int PositionChange { get; set; }
+		public int StagePosition { get; set; }
+		public TimeSpan StageTime { get; set; }
+		public TimeSpan StageDiffPrevious { get; set; }
+		public TimeSpan StageDiffFirst { get; set; }
 
-        // calculated overall data
-        public TimeSpan CalculatedOverallTime { get; internal set; }
-		public TimeSpan CalculatedOverallDiffPrevious { get; internal set; }
-		public TimeSpan CalculatedOverallDiffFirst { get; internal set; }
-		public int CalculatedPositionChange { get; internal set; }
-
-        // calculated stage data
-		public int CaclulatedStagePosition { get; internal set; }
-		public TimeSpan CalculatedStageTime { get; internal set; }
-		public TimeSpan CalculatedStageDiffPrevious { get; internal set; }
-		public TimeSpan CalculatedStageDiffFirst { get; internal set; }
-
-        /// <summary>
-        /// Creates a new DriverData object that represents a single driver's time on a single stage.
-        /// Data is the 'raw' string data taken from the results
-        /// Tags are optional (not all drivers will have tags)
-        /// </summary>
-        public DriverTime(int overallPosition, string driverName, string vehicle, string overallTime, string overallDiffFirst, string tags = null)
-        {
-            OverallPosition = overallPosition;
-            Tags = tags;
-            DriverName = driverName;
-            Vehicle = vehicle;
-            OverallTime = overallTime;
-            OverallDiffFirst = overallDiffFirst;
-
-            // TODO: this parsing code should not be here (sparation of concerns)
-            TimeSpan parsedOverallTime;
-
-            if (TimeSpan.TryParseExact(OverallTime, @"mm\:ss\.fff", CultureInfo.InvariantCulture, out parsedOverallTime))
-                CalculatedOverallTime = parsedOverallTime;
-            else if (TimeSpan.TryParseExact(OverallTime, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out parsedOverallTime))
-                CalculatedOverallTime = parsedOverallTime;
-            else
-                throw new ArgumentException("Could not parse overall time");
-        }
+        
     }
 }

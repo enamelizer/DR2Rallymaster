@@ -3,6 +3,7 @@ using DR2Rallymaster.DataModels;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -143,45 +144,79 @@ namespace DR2Rallymaster.Services
             if (eventToOutput == null)
                 return;
 
-            var responses = new List<Tuple<HttpStatusCode, string>>();
+            var stageResultResponses = new List<Tuple<HttpStatusCode, string>>();
             for (int i = 0; i < eventToOutput.Stages.Length; i++)
             {
-                responses.Add(await racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
+                stageResultResponses.Add(await racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
             }
 
             var rallyData = new Rally();
 
-            // push this to the number cruncher
-            foreach(var response in responses)
+            // go thru each response and create the internal data used
+            foreach(var stageResultResponse in stageResultResponses)
             {
-                if (response.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(response.Item2))
+                if (stageResultResponse.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(stageResultResponse.Item2))
                     return; // TODO error handling
 
-                var apiData = JsonConvert.DeserializeObject<LeaderboardApiModel>(response.Item2);
-                if (apiData == null)
+                var stageApiData = JsonConvert.DeserializeObject<LeaderboardApiModel>(stageResultResponse.Item2);
+                if (stageApiData == null)
                     return; // TODO error handling
 
                 var stageData = new Stage();
 
-                foreach (var driverEntry in apiData.Entries)
-                    stageData.AddDriver(new DriverTime(driverEntry.Rank, driverEntry.Name, driverEntry.VehicleName, driverEntry.TotalTime, driverEntry.TotalDiff));
+                foreach (var driverEntry in stageApiData.Entries)
+                    stageData.AddDriver(CreateDriverTime(driverEntry));
 
                 rallyData.AddStage(stageData);
             }
 
             // now crunch the numbers
-            // TODO we should no longer need to do this step since stage times already exist, they should be added to the DriverTime object instead
-            rallyData.CalculateTimes();
+            // this will generate any data that is not provided by the API
+            rallyData.ProcessResults();
 
             // get the CSV formatted output and write it to file
             // TODO this should probably be somewhere else for encapsulation and separation of concerns
-            var outputString = GetCsvOverallTimes(rallyData);
+            var outputString = GetCsvStageTimes(rallyData);
             outputString += Environment.NewLine;
-            outputString += GetCsvStageTimes(rallyData);
+            outputString += GetCsvOverallTimes(rallyData);
             outputString += Environment.NewLine;
             outputString += GetCsvChartOutput(rallyData);
 
             File.WriteAllText(filePath, outputString, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Creates a new DriverData object that represents a single driver's time on a single stage.
+        /// Data is the 'raw' string data taken from the results
+        /// </summary>
+        private DriverTime CreateDriverTime(Entry driverEntry)
+        {
+            var driverTime = new DriverTime();
+            driverTime.IsDnf = driverEntry.IsDnfEntry;
+            driverTime.OverallPosition = driverEntry.Rank;
+            driverTime.DriverName = driverEntry.Name;
+            driverTime.Vehicle = driverEntry.VehicleName;
+            driverTime.OverallTime = ParseTimeSpan(driverEntry.TotalTime);
+            driverTime.OverallDiffFirst = ParseTimeSpan(driverEntry.TotalDiff);
+            driverTime.StageTime = ParseTimeSpan(driverEntry.StageTime);
+            driverTime.StageDiffFirst = ParseTimeSpan(driverEntry.StageDiff);
+
+            return driverTime;
+        }
+
+        // parses the time strings into TimeSpan objects
+        private TimeSpan ParseTimeSpan(string time)
+        {
+            if (time.Contains("+"))
+                time = time.Replace("+", "");
+
+            TimeSpan parsedTimeSpan;
+            if (TimeSpan.TryParseExact(time, @"mm\:ss\.fff", CultureInfo.InvariantCulture, out parsedTimeSpan))
+                return parsedTimeSpan;
+            else if (TimeSpan.TryParseExact(time, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out parsedTimeSpan))
+                return parsedTimeSpan;
+            else
+                return TimeSpan.Zero;
         }
 
         private string GetCsvOverallTimes(Rally rallyData)
@@ -191,6 +226,8 @@ namespace DR2Rallymaster.Services
             int stageCount = 1;
             foreach (Stage stage in rallyData)
             {
+                var dnfList = new List<DriverTime>();
+
                 outputSB.AppendLine("SS" + stageCount);
                 outputSB.AppendLine("Overall");
                 outputSB.AppendLine("Pos, Pos Chng, Name, Vehicle, Time, Diff 1st, Diff Prev");
@@ -205,7 +242,7 @@ namespace DR2Rallymaster.Services
                     else if (x.Value == null && y.Value == null)
                         return 0;
                     else
-                        return x.Value.CalculatedOverallTime.CompareTo(y.Value.CalculatedOverallTime);
+                        return x.Value.OverallTime.CompareTo(y.Value.OverallTime);
                 });
 
                 foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
@@ -213,16 +250,23 @@ namespace DR2Rallymaster.Services
                     var driverName = driverTimeKvp.Key;
                     var driverTime = driverTimeKvp.Value;
 
+                    // put DNFs into a separate list
+                    if (driverTime.IsDnf)
+                    {
+                        dnfList.Add(driverTime);
+                        continue;
+                    }
+
                     if (driverTime != null)
                     {
                         var formatString = @"hh\:mm\:ss\.fff";
                         var line = driverTime.OverallPosition + "," +
-                                   driverTime.CalculatedPositionChange + "," +
+                                   driverTime.PositionChange + "," +
                                    driverTime.DriverName + "," +
                                    driverTime.Vehicle + "," +
-                                   driverTime.CalculatedOverallTime.ToString(formatString) + "," +
-                                   driverTime.CalculatedOverallDiffFirst.ToString(formatString) + "," +
-                                   driverTime.CalculatedOverallDiffPrevious.ToString(formatString);
+                                   driverTime.OverallTime.ToString(formatString) + "," +
+                                   driverTime.OverallDiffFirst.ToString(formatString) + "," +
+                                   driverTime.OverallDiffPrevious.ToString(formatString);
 
                         outputSB.AppendLine(line);
                     }
@@ -230,6 +274,12 @@ namespace DR2Rallymaster.Services
                     {
                         outputSB.AppendLine(",,," + driverName + ",,DNF");
                     }
+                }
+
+                // put DNFs at the bottom
+                foreach(var driverTime in dnfList)
+                {
+                    outputSB.AppendLine(",," + driverTime.DriverName + "," + driverTime.Vehicle + ",DNF");
                 }
 
                 outputSB.AppendLine("");
@@ -247,6 +297,8 @@ namespace DR2Rallymaster.Services
 
             foreach (Stage stage in rallyData)
             {
+                var dnfList = new List<DriverTime>();
+
                 outputSB.AppendLine("SS" + stageCount);
                 outputSB.AppendLine("Stage");
                 outputSB.AppendLine("Pos, Name, Vehicle, Time, Diff 1st, Diff Prev");
@@ -261,7 +313,7 @@ namespace DR2Rallymaster.Services
                     else if (x.Value == null && y.Value == null)
                         return 0;
                     else
-                        return x.Value.CalculatedStageTime.CompareTo(y.Value.CalculatedStageTime);
+                        return x.Value.StageTime.CompareTo(y.Value.StageTime);
                 });
 
                 foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
@@ -269,24 +321,37 @@ namespace DR2Rallymaster.Services
                     var driverName = driverTimeKvp.Key;
                     var driverTime = driverTimeKvp.Value;
 
+                    // put DNFs into separate list
+                    if (driverTime.IsDnf)
+                    {
+                        dnfList.Add(driverTime);
+                        continue;
+                    }
+
                     // if a driver did not complete the pervious stage due to alt+f4 or a crash, the next stage
                     // will have a zero time for the CalculatedStageTime, so enter DNF
-                    if (driverTime == null || driverTime.CalculatedStageTime == TimeSpan.Zero)
+                    if (driverTime == null)
                     {
                         outputSB.AppendLine(",," + driverName + ",,DNF");
                     }
                     else
                     {
                         var formatString = @"mm\:ss\.fff";
-                        var line = driverTime.CaclulatedStagePosition + "," +
+                        var line = driverTime.StagePosition + "," +
                                    driverTime.DriverName + "," +
                                    driverTime.Vehicle + "," +
-                                   driverTime.CalculatedStageTime.ToString(formatString) + "," +
-                                   driverTime.CalculatedStageDiffFirst.ToString(formatString) + "," +
-                                   driverTime.CalculatedStageDiffPrevious.ToString(formatString);
+                                   driverTime.StageTime.ToString(formatString) + "," +
+                                   driverTime.StageDiffFirst.ToString(formatString) + "," +
+                                   driverTime.StageDiffPrevious.ToString(formatString);
 
                         outputSB.AppendLine(line);
                     }
+                }
+
+                // put DNFs at the bottom
+                foreach (var driverTime in dnfList)
+                {
+                    outputSB.AppendLine("," + driverTime.DriverName + "," + driverTime.Vehicle + ",DNF");
                 }
 
                 outputSB.AppendLine("");
@@ -314,7 +379,7 @@ namespace DR2Rallymaster.Services
                     else if (x.Value == null && y.Value == null)
                         return 0;
                     else
-                        return x.Value.CalculatedOverallTime.CompareTo(y.Value.CalculatedOverallTime);
+                        return x.Value.OverallTime.CompareTo(y.Value.OverallTime);
                 });
 
                 foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)

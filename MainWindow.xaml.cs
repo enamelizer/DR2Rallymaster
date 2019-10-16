@@ -212,6 +212,9 @@ namespace DR2Rallymaster
                 // disable the export button
                 btnGetStageResults.Visibility = Visibility.Hidden;
 
+                if (championshipsListBox.SelectedItem == null)
+                    return;
+
                 // get the championship ID
                 var championshipId = ((KeyValuePair<string, string>)championshipsListBox.SelectedItem).Key;
                 if (championshipId == null || String.IsNullOrWhiteSpace(championshipId))
