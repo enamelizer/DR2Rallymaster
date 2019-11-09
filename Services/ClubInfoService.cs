@@ -370,17 +370,19 @@ namespace DR2Rallymaster.Services
             foreach (Stage stage in rallyData)
             {
                 sortedStageData = stage.DriverTimes.ToList();
-                sortedStageData.Sort((x, y) =>
-                {
-                    if (x.Value != null && y.Value == null)
-                        return -1;
-                    else if (x.Value == null && y.Value != null)
-                        return 1;
-                    else if (x.Value == null && y.Value == null)
-                        return 0;
-                    else
-                        return x.Value.OverallTime.CompareTo(y.Value.OverallTime);
-                });
+                sortedStageData.OrderBy(x => x.Value.OverallPosition == 0).ThenBy(x => x.Value.OverallPosition);
+
+                //sortedStageData.Sort((x, y) =>
+                //{
+                //    if (x.Value != null && y.Value == null)
+                //        return -1;
+                //    else if (x.Value == null && y.Value != null)
+                //        return 1;
+                //    else if (x.Value == null && y.Value == null)
+                //        return 0;
+                //    else
+                //        return x.Value.OverallPosition.CompareTo(y.Value.OverallPosition);
+                //});
 
                 foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
                 {
@@ -397,19 +399,49 @@ namespace DR2Rallymaster.Services
                 }
             }
 
-            // sortedStageData should contain the last stage, sorted by overall time
+            // sortedStageData should contain the last stage, sorted by overall position
             if (sortedStageData == null)
                 return null;
 
-            foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
+            // keep a list of positionList that contains zeros
+            var dnfDict = new Dictionary<string, List<int>>();
+
+            var driverList = rallyData.DriverInfoDict.Values.OrderBy(x => x.OverallPosition == 0).ThenBy(x => x.OverallPosition);
+            foreach(var driver in driverList)
             {
-                var driverKey = driverTimeKvp.Key;
-                var positionList = positionDict[driverKey];
+                var positionList = positionDict[driver.Name];
+                if (positionList.Contains(0))
+                {
+                    dnfDict.Add(driver.Name, positionList);
+                    continue;
+                }
 
-                string line = driverKey + "," + String.Join(",", positionList);
-
+                string line = driver.Name + "," + String.Join(",", positionList);
                 outputSB.AppendLine(line);
             }
+
+            // remove zeros from dnfList
+            foreach (var positionList in dnfDict.Values)
+                positionList.RemoveAll(x => x == 0);
+
+            foreach(var driverKvp in dnfDict.OrderByDescending(x => x.Value.Count))
+            {
+                string line = driverKvp.Key + "," + String.Join(",", driverKvp.Value);
+                outputSB.AppendLine(line);
+            }
+
+
+
+
+            //foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
+            //{
+            //    var driverKey = driverTimeKvp.Key;
+            //    var positionList = positionDict[driverKey];
+
+            //    string line = driverKey + "," + String.Join(",", positionList);
+
+            //    outputSB.AppendLine(line);
+            //}
 
             return outputSB.ToString();
         }

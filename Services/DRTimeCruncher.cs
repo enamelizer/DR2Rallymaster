@@ -12,6 +12,10 @@ namespace DR2Rallymaster.Services
     public class Rally : IEnumerable
     {
 		public int StageCount { get { return stages.Count; } }
+        public Dictionary<string, int> VehicleCounts { get; set; }
+        public int DriverCount { get { return DriverInfoDict.Count; } }
+        public int DriversDnf { get; set; }
+        public Dictionary<string, DriverInfo> DriverInfoDict = new Dictionary<string, DriverInfo>();
 
         private List<Stage> stages = new List<Stage>();
 
@@ -31,21 +35,19 @@ namespace DR2Rallymaster.Services
             if (stages.Count < 1)
                 return true;
 
-            // create lookup tables for comparing times
-            var initialStageTimes = new Dictionary<string, DriverTime>();
+            // get a list of all drivers that ran a stage, this is used as the master entry list
+            ProcessDriverInfo();
+
             var previousStageTimes = new Dictionary<string, DriverTime>();
             var currentStageTimes = new Dictionary<string, DriverTime>();
-
-            // the first stage times, this is used as the master entry list (if someone alt+f4s on stage 1, what happens?)
-            initialStageTimes = stages[0].DriverTimes;
 
             // the "previous" stage's inital value is the first stage
             previousStageTimes = stages[0].DriverTimes;
 
             CalculateDeltas(stages[0], true);
 
-			// for each stage after SS1
-			for (int i = 1; i < stages.Count; i++)
+			// for each stage
+			for (int i = 0; i < stages.Count; i++)
 			{
 				currentStageTimes = stages[i].DriverTimes;
 
@@ -54,7 +56,7 @@ namespace DR2Rallymaster.Services
                 // go thru all results and add zero times as needed
 
                 // for each driver that started the rally
-                foreach (var driver in initialStageTimes.Keys)
+                foreach (var driver in DriverInfoDict.Keys)
                 {
                     // get the driver time for the previous and current stage
                     DriverTime currentDriverTime;
@@ -65,12 +67,12 @@ namespace DR2Rallymaster.Services
                     // if the driver does not have a current stage, create a DNF entry for them
                     if (!hasCurrentDriverTime)
                     {
-                        var driverEntry = initialStageTimes[driver];
                         var dnfEntry = new DriverTime()
                         {
                             IsDnf = true,
-                            DriverName = driverEntry.DriverName,
-                            Vehicle = driverEntry.Vehicle
+                            DriverName = driver,
+                            Vehicle = DriverInfoDict[driver].Vehicle,
+                            OverallPosition = 0
                         };
 
                         currentStageTimes.Add(driver, dnfEntry);
@@ -78,17 +80,29 @@ namespace DR2Rallymaster.Services
 
                     // if the driver has a current stage, but not a previous stage, mark the current stage as DNF
                     else if (hasCurrentDriverTime && !hasPreviousDriverTime)
+                    {
                         currentDriverTime.IsDnf = true;
+                        currentDriverTime.OverallPosition = 0;
+                    }
 
                     // the driver has a current stage and a previous stage, do stuff
                     else if (hasCurrentDriverTime && hasPreviousDriverTime)
                     {
                         if (previousDriverTime.IsDnf)
+                        {
                             currentDriverTime.IsDnf = true;
+                            currentDriverTime.OverallPosition = 0;
+                        }
 
                         if (!previousDriverTime.IsDnf || !currentDriverTime.IsDnf)
                             currentDriverTime.PositionChange = previousDriverTime.OverallPosition - currentDriverTime.OverallPosition;
                     }
+
+                    // set the overall position on the DriverInfo
+                    if (hasCurrentDriverTime)
+                        DriverInfoDict[driver].OverallPosition = currentDriverTime.OverallPosition;
+                    else
+                        DriverInfoDict[driver].OverallPosition = 0;
                 }
 
 				previousStageTimes = currentStageTimes;
@@ -181,7 +195,53 @@ namespace DR2Rallymaster.Services
 			}
 		}
 
-		public IEnumerator GetEnumerator()
+        // creates all stats for drivers
+        private void ProcessDriverInfo()
+        {
+            // first compile all the driver info
+            DriverInfoDict = new Dictionary<string, DriverInfo>();
+            VehicleCounts = new Dictionary<string, int>();
+            foreach (var stage in stages)
+            {
+                foreach(var driver in stage.DriverTimes.Keys)
+                {
+                    var driverTime = stage.DriverTimes[driver];
+
+                    if (!DriverInfoDict.ContainsKey(driver))
+                    {
+                        var driverInfo = new DriverInfo() { Name = driver, Vehicle = driverTime.Vehicle, StagesRecorded = 1, IsDnf = driverTime.IsDnf };
+                        DriverInfoDict.Add(driver, driverInfo);
+                    }
+                    else
+                    {
+                        if (driverTime.IsDnf)
+                            DriverInfoDict[driver].IsDnf = true;
+
+                       DriverInfoDict[driver].StagesRecorded++;
+                    }
+                }
+            }
+
+            // now go thru all the driver info and generate stats
+            DriversDnf = 0;
+            foreach(var driver in DriverInfoDict.Values)
+            {
+                // is dnf?
+                if (driver.StagesRecorded < StageCount || driver.IsDnf)
+                {
+                    driver.IsDnf = true;
+                    DriversDnf++;
+                }
+
+                // car driven
+                if (!VehicleCounts.ContainsKey(driver.Vehicle))
+                    VehicleCounts.Add(driver.Vehicle, 1);
+                else
+                    VehicleCounts[driver.Vehicle]++;
+            }
+        }
+
+        public IEnumerator GetEnumerator()
 		{
 			return ((IEnumerable)stages).GetEnumerator();
 		}
@@ -238,7 +298,14 @@ namespace DR2Rallymaster.Services
 		public TimeSpan StageTime { get; set; }
 		public TimeSpan StageDiffPrevious { get; set; }
 		public TimeSpan StageDiffFirst { get; set; }
+    }
 
-        
+    public class DriverInfo
+    {
+        public string Name { get; set; }
+        public string Vehicle { get; set; }
+        public int StagesRecorded { get; set; }
+        public bool IsDnf { get; set; }
+        public int OverallPosition { get; set; }
     }
 }

@@ -128,13 +128,15 @@ namespace DR2Rallymaster
             searchProgressRing.IsActive = false;
             statusLabel.Visibility = Visibility.Hidden;
 
-            if (clubInfoModel == null)
-            {
-                // TODO error reporting
-            }
-
             // clear the UI before populating it
             ClearUi();
+
+            if (clubInfoModel == null)
+            {
+                clubNameLabel.Text = "Error";
+                clubDescLabel.Text = "Racenet didn't return any data.";
+                return;
+            }
 
             // populate club title and desc
             clubNameLabel.Text = clubInfoModel.ClubInfo.Club.Name;
@@ -343,7 +345,15 @@ namespace DR2Rallymaster
                 searchProgressRing.IsActive = true;
                 statusLabel.Visibility = Visibility.Visible;
 
-                await clubInfoService.SaveStageDataToCsv(championshipId, eventId, saveFileDialog.FileName);
+                try
+                {
+                    await clubInfoService.SaveStageDataToCsv(championshipId, eventId, saveFileDialog.FileName);
+                }
+                catch (Exception exp)
+                {
+
+                    MessageBox.Show(exp.Message);
+                }
 
                 searchProgressRing.IsActive = false;
                 statusLabel.Visibility = Visibility.Hidden;
