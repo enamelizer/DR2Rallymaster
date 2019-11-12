@@ -153,8 +153,9 @@ namespace DR2Rallymaster.Services
             var rallyData = new Rally();
 
             // go thru each response and create the internal data used
-            foreach(var stageResultResponse in stageResultResponses)
+            for (int i=0; i < stageResultResponses.Count; i++)
             {
+                var stageResultResponse = stageResultResponses[i];
                 if (stageResultResponse.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(stageResultResponse.Item2))
                     return; // TODO error handling
 
@@ -162,7 +163,7 @@ namespace DR2Rallymaster.Services
                 if (stageApiData == null)
                     return; // TODO error handling
 
-                var stageData = new Stage();
+                var stageData = new Stage(eventToOutput.Stages[i].Name);
 
                 foreach (var driverEntry in stageApiData.Entries)
                     stageData.AddDriver(CreateDriverTime(driverEntry));
@@ -179,6 +180,8 @@ namespace DR2Rallymaster.Services
             var outputString = GetCsvStageTimes(rallyData);
             outputString += Environment.NewLine;
             outputString += GetCsvOverallTimes(rallyData);
+            outputString += Environment.NewLine;
+            outputString += GetStats(rallyData);
             outputString += Environment.NewLine;
             outputString += GetCsvChartOutput(rallyData);
 
@@ -228,8 +231,8 @@ namespace DR2Rallymaster.Services
             {
                 var dnfList = new List<DriverTime>();
 
-                outputSB.AppendLine("SS" + stageCount);
-                outputSB.AppendLine("Overall");
+                outputSB.AppendLine("SS" + stageCount + " - " + stage.Name);
+                outputSB.AppendLine("Overall Times");
                 outputSB.AppendLine("Pos, Pos Chng, Name, Vehicle, Time, Diff 1st, Diff Prev");
 
                 List<KeyValuePair<string, DriverTime>> sortedStageData = stage.DriverTimes.ToList();
@@ -299,8 +302,8 @@ namespace DR2Rallymaster.Services
             {
                 var dnfList = new List<DriverTime>();
 
-                outputSB.AppendLine("SS" + stageCount);
-                outputSB.AppendLine("Stage");
+                outputSB.AppendLine("SS" + stageCount + " - " + stage.Name);
+                outputSB.AppendLine("Stage Times");
                 outputSB.AppendLine("Pos, Name, Vehicle, Time, Diff 1st, Diff Prev");
 
                 List<KeyValuePair<string, DriverTime>> sortedStageData = stage.DriverTimes.ToList();
@@ -363,7 +366,8 @@ namespace DR2Rallymaster.Services
 
         private string GetCsvChartOutput(Rally rallyData)
         {
-            var outputSB = new StringBuilder();
+            var positiveOutputSB = new StringBuilder("Chart Data").AppendLine();
+            var negativeOutputSB = new StringBuilder("Negated Chart Data").AppendLine();
             var positionDict = new Dictionary<string, List<int>>();
             List<KeyValuePair<string, DriverTime>> sortedStageData = null;
 
@@ -371,18 +375,6 @@ namespace DR2Rallymaster.Services
             {
                 sortedStageData = stage.DriverTimes.ToList();
                 sortedStageData.OrderBy(x => x.Value.OverallPosition == 0).ThenBy(x => x.Value.OverallPosition);
-
-                //sortedStageData.Sort((x, y) =>
-                //{
-                //    if (x.Value != null && y.Value == null)
-                //        return -1;
-                //    else if (x.Value == null && y.Value != null)
-                //        return 1;
-                //    else if (x.Value == null && y.Value == null)
-                //        return 0;
-                //    else
-                //        return x.Value.OverallPosition.CompareTo(y.Value.OverallPosition);
-                //});
 
                 foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
                 {
@@ -416,8 +408,10 @@ namespace DR2Rallymaster.Services
                     continue;
                 }
 
-                string line = driver.Name + "," + String.Join(",", positionList);
-                outputSB.AppendLine(line);
+                string posline = driver.Name + "," + String.Join(",", positionList);
+                string negline = driver.Name + "," + String.Join(",", positionList.Select(x => x*-1));
+                positiveOutputSB.AppendLine(posline);
+                negativeOutputSB.AppendLine(negline);
             }
 
             // remove zeros from dnfList
@@ -426,24 +420,43 @@ namespace DR2Rallymaster.Services
 
             foreach(var driverKvp in dnfDict.OrderByDescending(x => x.Value.Count))
             {
-                string line = driverKvp.Key + "," + String.Join(",", driverKvp.Value);
-                outputSB.AppendLine(line);
+                string posline = driverKvp.Key + "," + String.Join(",", driverKvp.Value);
+                string negline = driverKvp.Key + "," + String.Join(",", driverKvp.Value.Select(x => x*-1));
+                positiveOutputSB.AppendLine(posline);
+                negativeOutputSB.AppendLine(negline);
             }
 
+            return positiveOutputSB.ToString() + Environment.NewLine + negativeOutputSB.ToString();
+        }
 
+        private string GetStats(Rally rallyInfo)
+        {
+            var outputSb = new StringBuilder("Stats");
+            outputSb.AppendLine(Environment.NewLine);
 
+            // participation stats
+            var driversFinished = rallyInfo.DriverCount - rallyInfo.DriversDnf;
+            outputSb.AppendLine("Participation Stats");
+            outputSb.AppendLine("Drivers Entered," + rallyInfo.DriverCount);
+            outputSb.AppendLine("Drivers Finished," + (driversFinished));
+            outputSb.AppendLine("Drivers DNFd," + rallyInfo.DriversDnf);
+            outputSb.AppendLine(String.Format("Completion Rate,{0:P2}", ((double)driversFinished / rallyInfo.DriverCount)));
 
-            //foreach (KeyValuePair<string, DriverTime> driverTimeKvp in sortedStageData)
-            //{
-            //    var driverKey = driverTimeKvp.Key;
-            //    var positionList = positionDict[driverKey];
+            // stage wins
+            outputSb.AppendLine();
+            outputSb.AppendLine("Stage Wins");
+            var stageWinners = rallyInfo.DriverInfoDict.Values.Where(x => x.StagesWon != 0).OrderByDescending(x => x.StagesWon);
+            foreach(var driverInfo in stageWinners)
+                outputSb.AppendLine(driverInfo.Name + "," + driverInfo.StagesWon);
 
-            //    string line = driverKey + "," + String.Join(",", positionList);
+            // manufacturer count
+            outputSb.AppendLine();
+            outputSb.AppendLine("Manufacturer Count");
+            var carCounts = rallyInfo.VehicleCounts.OrderByDescending(x => x.Value);
+            foreach (var car in carCounts)
+                outputSb.AppendLine(car.Key + "," + car.Value);
 
-            //    outputSB.AppendLine(line);
-            //}
-
-            return outputSB.ToString();
+            return outputSb.ToString();
         }
     }
 }

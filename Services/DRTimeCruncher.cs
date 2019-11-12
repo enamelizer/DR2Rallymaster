@@ -44,8 +44,6 @@ namespace DR2Rallymaster.Services
             // the "previous" stage's inital value is the first stage
             previousStageTimes = stages[0].DriverTimes;
 
-            CalculateDeltas(stages[0], true);
-
 			// for each stage
 			for (int i = 0; i < stages.Count; i++)
 			{
@@ -107,7 +105,8 @@ namespace DR2Rallymaster.Services
 
 				previousStageTimes = currentStageTimes;
 
-				CalculateDeltas(stages[i], false);
+                var isFirstStage = (i == 0);    // i == 0 this is the first stage
+                CalculateDeltas(stages[i], isFirstStage);
 			}
 
             return true;
@@ -122,6 +121,7 @@ namespace DR2Rallymaster.Services
             TimeSpan previousStageTime = new TimeSpan();
             bool firstDriverProcessed = false;
 
+            // this loop handles overall time deltas
             foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.OverallTime))
 			{
 				if (driverTime == null)
@@ -137,10 +137,13 @@ namespace DR2Rallymaster.Services
 					previousOverallTime = driverTime.OverallTime;
                     firstDriverProcessed = true;
 
-					if (isFirstStage == true)
-						driverTime.StagePosition = driverTime.OverallPosition;
+                    if (isFirstStage == true)
+                    {
+                        driverTime.StagePosition = driverTime.OverallPosition;
+                        DriverInfoDict[driverTime.DriverName].StagesWon++;      // if this is the first stage and overall pos is 1, marke stage win
+                    }
 
-					continue;
+                    continue;
 				}
 
                 // error - if the first driver has not been processed at this point,
@@ -162,7 +165,7 @@ namespace DR2Rallymaster.Services
             // reset error flag for reuse
             firstDriverProcessed = false;
 
-            // order by stage time and calculate stage time deltas
+            // this loop handles stage time deltas
             if (isFirstStage == false)  // skip for the first stage, there is no stage delta to calculate
 			{
 				int stagePosition = 1;
@@ -177,6 +180,10 @@ namespace DR2Rallymaster.Services
 						fastestStageTime = driverTime.StageTime;
 						previousStageTime = driverTime.StageTime;
 						driverTime.StagePosition = stagePosition;
+
+                        // mark the winner of the rest of the stages
+                        DriverInfoDict[driverTime.DriverName].StagesWon++;
+
 						stagePosition++;
                         firstDriverProcessed = true;
                         continue;
@@ -253,6 +260,7 @@ namespace DR2Rallymaster.Services
     /// </summary>
     public class Stage : IEnumerable
     {
+        public string Name { get; set; }
 		public Dictionary<string, DriverTime> DriverTimes { get; private set; }
 
         /// <summary>
@@ -270,8 +278,9 @@ namespace DR2Rallymaster.Services
 			return ((IEnumerable)DriverTimes).GetEnumerator();
         }
 
-		public Stage()
+		public Stage(string name)
 		{
+            Name = name;
 			DriverTimes = new Dictionary<string, DriverTime>();
 		}
 
@@ -307,5 +316,6 @@ namespace DR2Rallymaster.Services
         public int StagesRecorded { get; set; }
         public bool IsDnf { get; set; }
         public int OverallPosition { get; set; }
+        public int StagesWon { get; set; }
     }
 }
