@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DR2Rallymaster")]
-[assembly: AssemblyCopyright("Copyright © 2019 Aaron DeMarre")]
+[assembly: AssemblyCopyright("Copyright © 2019 enamelizer")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
