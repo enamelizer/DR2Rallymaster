@@ -122,7 +122,7 @@ namespace DR2Rallymaster.Services
             if (clubInfoCache == null)
                 return;   // TODO error handling?
 
-
+            // this gets the event results from the cache
             Event eventToOutput = null;
             for (int i = 0; i < clubInfoCache.RecentResults.Championships.Length; i++)
             {
@@ -140,10 +140,11 @@ namespace DR2Rallymaster.Services
                 }
             }
 
-            // if we have found our event, get the stages from it
+            // if we didn't find the event, bail
             if (eventToOutput == null)
                 return;
 
+            // get the stage results from the event
             var stageResultResponses = new List<Tuple<HttpStatusCode, string>>();
             for (int i = 0; i < eventToOutput.Stages.Length; i++)
             {
@@ -177,7 +178,9 @@ namespace DR2Rallymaster.Services
 
             // get the CSV formatted output and write it to file
             // TODO this should probably be somewhere else for encapsulation and separation of concerns
-            var outputString = GetCsvStageTimes(rallyData);
+            var outputString = GetHeaderData(championshipId, eventId, eventToOutput.Id);
+            outputString += Environment.NewLine;
+            outputString += GetCsvStageTimes(rallyData);
             outputString += Environment.NewLine;
             outputString += GetCsvOverallTimes(rallyData);
             outputString += Environment.NewLine;
@@ -222,6 +225,20 @@ namespace DR2Rallymaster.Services
                 return TimeSpan.Zero;
         }
 
+        // get header data
+        private string GetHeaderData(string championshipId, string challengeId, string actualEventId)
+        {
+            var eventMetaData = GetEventMetadata(championshipId, challengeId);
+
+            var outputSb = new StringBuilder();
+            outputSb.AppendLine(clubInfoCache.ClubInfo.Club.Name);
+            outputSb.AppendLine(eventMetaData.CountryName + "," + eventMetaData.LocationName);
+            outputSb.AppendLine("Championship ID," + championshipId + ",Event ID," + actualEventId);
+            outputSb.AppendLine("Event Status," + eventMetaData.EventStatus);
+
+            return outputSb.ToString();
+        }
+        
         private string GetCsvOverallTimes(Rally rallyData)
         {
             var outputSB = new StringBuilder();
