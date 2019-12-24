@@ -1,6 +1,9 @@
 # DR2Rallymaster
 ## A results processor and exporter for Dirt Rally 2.0 Clubs
 
+![screenshot](https://i.imgur.com/ARcGyN8.png)
+
+
 ### Features
 This program extends Dirt Rally 2.0 Clubs results with several features:
 
