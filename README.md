@@ -14,6 +14,8 @@ This program extends Dirt Rally 2.0 Clubs results with several features:
 
 * View metadata stored in RaceNet that is not displayed on the Clubs site
 
+* Selectable themes and colors - hit the gear icon in the top left corner to change the base theme and accent color
+
 ### How to use
 1) Log into Racenet using the "log into racenet" button
 2) Wait for authentication to be setup, the authentication screen should be closed automatically
