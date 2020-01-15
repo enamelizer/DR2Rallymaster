@@ -137,12 +137,6 @@ namespace DR2Rallymaster.Services
 					previousOverallTime = driverTime.OverallTime;
                     firstDriverProcessed = true;
 
-                    if (isFirstStage == true)
-                    {
-                        driverTime.StagePosition = driverTime.OverallPosition;
-                        DriverInfoDict[driverTime.DriverName].StagesWon++;      // if this is the first stage and overall pos is 1, marke stage win
-                    }
-
                     continue;
 				}
 
@@ -162,43 +156,39 @@ namespace DR2Rallymaster.Services
 				previousOverallTime = driverTime.OverallTime;
 			}
 
-            // reset error flag for reuse
+            // reset flag for reuse
             firstDriverProcessed = false;
 
-            // this loop handles stage time deltas
-            if (isFirstStage == false)  // skip for the first stage, there is no stage delta to calculate
+			int stagePosition = 1;
+			foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.StageTime))
 			{
-				int stagePosition = 1;
-				foreach (DriverTime driverTime in currentStage.DriverTimes.Values.Where(x => x != null).OrderBy(x => x.StageTime))
+                // skip DNF entries
+				if (driverTime.IsDnf)
+					continue;
+
+				if (stagePosition == 1)
 				{
-                    // skip DNF entries
-					if (driverTime.IsDnf)
-						continue;
-
-					if (stagePosition == 1)
-					{
-						fastestStageTime = driverTime.StageTime;
-						previousStageTime = driverTime.StageTime;
-						driverTime.StagePosition = stagePosition;
-
-                        // mark the winner of the rest of the stages
-                        DriverInfoDict[driverTime.DriverName].StagesWon++;
-
-						stagePosition++;
-                        firstDriverProcessed = true;
-                        continue;
-					}
-
-                    // error - if the first driver has not been processed at this point,
-                    // we can't calculate deltas for the other drivers.
-                    if (firstDriverProcessed == false)
-                        return;
-
-					driverTime.StageDiffPrevious = driverTime.StageTime - previousStageTime;
-					driverTime.StagePosition = stagePosition;
+					fastestStageTime = driverTime.StageTime;
 					previousStageTime = driverTime.StageTime;
+					driverTime.StagePosition = stagePosition;
+
+                    // mark the winner of the rest of the stages
+                    DriverInfoDict[driverTime.DriverName].StagesWon++;
+
 					stagePosition++;
+                    firstDriverProcessed = true;
+                    continue;
 				}
+
+                // error - if the first driver has not been processed at this point,
+                // we can't calculate deltas for the other drivers.
+                if (firstDriverProcessed == false)
+                    return;
+
+				driverTime.StageDiffPrevious = driverTime.StageTime - previousStageTime;
+				driverTime.StagePosition = stagePosition;
+				previousStageTime = driverTime.StageTime;
+				stagePosition++;
 			}
 		}
 

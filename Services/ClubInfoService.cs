@@ -356,7 +356,7 @@ namespace DR2Rallymaster.Services
                     }
                     else
                     {
-                        var formatString = @"mm\:ss\.fff";
+                        var formatString = @"hh\:mm\:ss\.fff";
                         var line = driverTime.StagePosition + "," +
                                    driverTime.DriverName + "," +
                                    driverTime.Vehicle + "," +
