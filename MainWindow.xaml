@@ -7,7 +7,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:Icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Modern"
         mc:Ignorable="d"
-        Title="DR2 Rallymaster" Height="600" MinHeight="600" Width="800" SizeToContent="Height"
+        Title="DR2 Rallymaster v1.1" Height="600" MinHeight="600" Width="800" SizeToContent="Height"
         Closing="MetroWindow_Closing">
 
     <!-- Creates the "RightWindowCommand" that has the settings cog -->
