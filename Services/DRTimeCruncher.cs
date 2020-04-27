@@ -259,7 +259,21 @@ namespace DR2Rallymaster.Services
         /// <returns>true</returns>
         public bool AddDriver(DriverTime driverTime)
         {
-			DriverTimes.Add(driverTime.DriverName, driverTime);
+            // this is a lame fix for an issue where drivers can have duplicate names
+            // since I have no way of differntiating between drivers, I can only give them
+            // unique names knowing they all get mixed up...
+            var driverName = driverTime.DriverName;
+            var id = 1;
+            while (DriverTimes.ContainsKey(driverName))
+            {
+                driverName = driverTime.DriverName + id.ToString();
+                id++;
+            }
+
+            if (driverTime.DriverName != driverName)
+                driverTime.DriverName = driverName;
+
+			DriverTimes.Add(driverName, driverTime);
             return true;
         }
 

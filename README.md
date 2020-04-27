@@ -19,6 +19,9 @@ This program extends Dirt Rally 2.0 Clubs results with several features:
 
 * Selectable themes and colors - hit the gear icon in the top left corner to change the base theme and accent color
 
+### Known Issues
+* Non-unique driver names ("DiRT Player") cannot be associated properly between stages as there is no identifying information in the stage data beyond the name.
+
 ### How to use
 1) Log into Racenet using the "log into racenet" button
 2) Wait for authentication to be setup, the authentication screen should be closed automatically
