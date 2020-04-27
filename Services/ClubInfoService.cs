@@ -144,29 +144,15 @@ namespace DR2Rallymaster.Services
             if (eventToOutput == null)
                 return;
 
+            var rallyData = new Rally();
+
             // get the stage results from the event
             var stageResultResponses = new List<Tuple<HttpStatusCode, string>>();
             for (int i = 0; i < eventToOutput.Stages.Length; i++)
             {
-                stageResultResponses.Add(await racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString()));
-            }
-
-            var rallyData = new Rally();
-
-            // go thru each response and create the internal data used
-            for (int i=0; i < stageResultResponses.Count; i++)
-            {
-                var stageResultResponse = stageResultResponses[i];
-                if (stageResultResponse.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(stageResultResponse.Item2))
-                    return; // TODO error handling
-
-                var stageApiData = JsonConvert.DeserializeObject<LeaderboardApiModel>(stageResultResponse.Item2);
-                if (stageApiData == null)
-                    return; // TODO error handling
-
                 var stageData = new Stage(eventToOutput.Stages[i].Name);
-
-                foreach (var driverEntry in stageApiData.Entries)
+                var entryList = await racenetApi.GetStageResults(eventToOutput.ChallengeId, eventToOutput.Id, i.ToString());
+                foreach (var driverEntry in entryList)
                     stageData.AddDriver(CreateDriverTime(driverEntry));
 
                 rallyData.AddStage(stageData);

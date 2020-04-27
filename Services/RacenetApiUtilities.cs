@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using DR2Rallymaster.ApiModels;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,18 +99,44 @@ namespace DR2Rallymaster.Services
             return await GetStringAsync(recentResultsUrl);
         }
 
-        public async Task<Tuple<HttpStatusCode, string>> GetStageResults(string challengeId, string eventId, string stageId)
+        // for a given stage get all entries and return a list of them
+        // I am breaking the encapsulation here, but it is easier to
+        // process all stage data and simply return deserialized model data
+        public async Task<List<Entry>> GetStageResults(string challengeId, string eventId, string stageId)
         {
             // example request payload
             // {"challengeId":"15146","selectedEventId":0,"stageId":"0","page":1,"pageSize":100,"orderByTotalTime":true,"platformFilter":"None","playerFilter":"Everyone","filterByAssists":"Unspecified","filterByWheel":"Unspecified","nationalityFilter":"None","eventId":"15309"}
-            var baseRequestPayload = "{{\"challengeId\":\"{0}\",\"selectedEventId\":0,\"stageId\":\"{1}\",\"page\":1,\"pageSize\":100,\"orderByTotalTime\":true,\"platformFilter\":\"None\",\"playerFilter\":\"Everyone\",\"filterByAssists\":\"Unspecified\",\"filterByWheel\":\"Unspecified\",\"nationalityFilter\":\"None\",\"eventId\":\"{2}\"}}";
-            var requestPayload = String.Format(baseRequestPayload, challengeId, stageId, eventId);
+            var baseRequestPayload = "{{\"challengeId\":\"{0}\",\"selectedEventId\":0,\"stageId\":\"{1}\",\"page\":{2},\"pageSize\":100,\"orderByTotalTime\":true,\"platformFilter\":\"None\",\"playerFilter\":\"Everyone\",\"filterByAssists\":\"Unspecified\",\"filterByWheel\":\"Unspecified\",\"nationalityFilter\":\"None\",\"eventId\":\"{3}\"}}";
 
-            var leaderboardUrl = "https://dirtrally2.com/api/Leaderboard";
+            // get multiple pages of data
+            var responseList = new List<Entry>();
+            var currentPage = 1;
 
-            var response = await PostStringAsync(leaderboardUrl, requestPayload);
+            while (true)
+            {
+                var requestPayload = String.Format(baseRequestPayload, challengeId, stageId, currentPage, eventId);
+                var leaderboardUrl = "https://dirtrally2.com/api/Leaderboard";
+                var response = await PostStringAsync(leaderboardUrl, requestPayload);
 
-            return response;
+                // process a single page of data
+                if (response.Item1 == HttpStatusCode.OK && !String.IsNullOrWhiteSpace(response.Item2))
+                {
+                    var stageApiData = JsonConvert.DeserializeObject<LeaderboardApiModel>(response.Item2);
+                    if (stageApiData == null)
+                        break;
+
+                    responseList.AddRange(stageApiData.Entries);
+                    currentPage++;
+                    if (currentPage > int.Parse(stageApiData.PageCount))
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return responseList;
     }
 
         // Given a URI, send a GET and return the status code and result as a string
