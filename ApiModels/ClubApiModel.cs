@@ -3,7 +3,7 @@
     // This represents the JSON result returned from the "Club" endpoint
     // Contains information about the club as well as info about the user's permissions
     // example url:
-    // https://dirtrally2.com/api/Club/183582
+    // https://dirtrally2.dirtgame.com/api/Club/183582
     // no params
 
     public class ClubApiModel

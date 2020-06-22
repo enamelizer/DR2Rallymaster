@@ -6,7 +6,7 @@ namespace DR2Rallymaster.ApiModels
     // This represents the JSON result returned for the "championships" endpoint
     // Contains information about current, past (and future?) championships
     // Example URL:
-    // https://dirtrally2.com/api/Club/183582/championships
+    // https://dirtrally2.dirtgame.com/api/Club/183582/championships
     // no params
 
     public class ChampionshipMetaData

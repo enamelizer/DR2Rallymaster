@@ -7,7 +7,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:Icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Modern"
         mc:Ignorable="d"
-        Title="DR2 Rallymaster v1.2" Height="600" MinHeight="600" Width="800" SizeToContent="Height"
+        Title="DR2 Rallymaster v1.3" Height="600" MinHeight="600" Width="800" SizeToContent="Height"
         Closing="MetroWindow_Closing">
 
     <!-- Creates the "RightWindowCommand" that has the settings cog -->
@@ -19,6 +19,9 @@
                     <ContextMenu>
                         <MenuItem Name="menuItemThemes" Header="Base Themes" />
                         <MenuItem Name="menuItemAccents" Header="Accents" />
+                        <MenuItem Name="baseUrlMenuItem" Header="Base URL">
+                            <TextBox x:Name="baseUrlTextBox" PreviewLostKeyboardFocus="OnPreviewLostKeyboardFocus" />
+                        </MenuItem>
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>
@@ -71,7 +74,7 @@
                     1) Log into Racenet using the aptly named "log into racenet" button above <LineBreak />
                     2) Wait for authentication to be setup in the tool <LineBreak />
                     3) Search for the Club using the Club ID, these are the digits at the end of the club URL <LineBreak />
-                    &#160;&#160;&#160;&#160;Example: https://dirtrally2.com/clubs/club/183582 is Club ID: 183582
+                    &#160;&#160;&#160;&#160;Example: https://dirtrally2.dirtgame.com/clubs/club/183582 is Club ID: 183582
                 </TextBlock>
             </StackPanel>
         </GroupBox>

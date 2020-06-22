@@ -41,6 +41,25 @@ namespace DR2Rallymaster
         {
             InitializeComponent();
             InitializeThemes();
+
+            baseUrlTextBox.Text = Properties.Settings.Default.BaseUrl;
+            baseUrlTextBox.LostFocus += BaseUrlTextBox_LostFocus;
+        }
+
+        // when the URL text box loses focus, save the new URL
+        private void BaseUrlTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.BaseUrl = baseUrlTextBox.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        // allows the url textbox to remain focused when you mouse away
+        private void OnPreviewLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (baseUrlTextBox.IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+            }
         }
 
         private string currentTheme;

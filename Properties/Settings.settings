@@ -11,5 +11,8 @@
     <Setting Name="LastSelectedExportPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="BaseUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://dirtrally2.dirtgame.com</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

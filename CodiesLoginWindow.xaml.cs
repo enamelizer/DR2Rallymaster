@@ -24,16 +24,21 @@ namespace DR2Rallymaster
 
         private const Int32 InternetCookieHttponly = 0x2000;
 
+        private string baseUrl = Properties.Settings.Default.BaseUrl;
+
         public CodiesLoginWindow()
         {
             InitializeComponent();
+
+            var sourceUri = new Uri(baseUrl + "/account/login?returnUri=%2Fclubs%2F");
+            racenetLoginBrowser.Source = sourceUri;
         }
 
         // when the browser closes, grab the cookie container and pass it back to the main window for reuse
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // get the cookie container from the WebBrowser before it closes
-            var cookieContainer = GetUriCookieContainer(new Uri("https://dirtrally2.com"));
+            var cookieContainer = GetUriCookieContainer(new Uri(baseUrl));
 
             ((MainWindow)Application.Current.MainWindow).SharedCookieContainer = cookieContainer;
         }
@@ -84,7 +89,7 @@ namespace DR2Rallymaster
         {
             System.Diagnostics.Debug.WriteLine(e.Uri);
 
-            if (e.Uri.ToString() == "https://dirtrally2.com/clubs/")
+            if (e.Uri.ToString() == baseUrl + "/clubs/")
                 this.Close();
 
         }

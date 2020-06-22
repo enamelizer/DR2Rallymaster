@@ -16,6 +16,8 @@ namespace DR2Rallymaster.Services
         // The client used to get data from the API, contains the user authentication cookies
         private readonly HttpClient httpClient;
 
+        private string baseUrl = Properties.Settings.Default.BaseUrl;
+
         public RacenetApiUtilities(CookieContainer sharedCookieContainer)
         {
             var httpClientHandler = new HttpClientHandler { CookieContainer = sharedCookieContainer };
@@ -28,7 +30,7 @@ namespace DR2Rallymaster.Services
         {
             try
             {
-                var initialState = await GetStringAsync("https://dirtrally2.com/api/ClientStore/GetInitialState");
+                var initialState = await GetStringAsync(baseUrl + "/api/ClientStore/GetInitialState");
                 if (initialState.Item1 != HttpStatusCode.OK || String.IsNullOrWhiteSpace(initialState.Item2))
                     return false;
 
@@ -55,47 +57,47 @@ namespace DR2Rallymaster.Services
         // Given a club ID, generate the appropriate URL and fetch the club data
         public async Task<Tuple<HttpStatusCode, string>> GetClubInfo(string clubId)
         {
-            // example URL https://dirtrally2.com/api/Club/183582
+            // example URL https://dirtrally2.dirtgame.com/api/Club/183582
 
-            var baseUrl = "https://dirtrally2.com/api/Club/";
+            var apiUrl = baseUrl + "/api/Club/";
 
             // no need to make a http call with a known bad club ID
             if (String.IsNullOrWhiteSpace(clubId))
                 return new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, null);
 
             // create URL and query API
-            var clubUrl = baseUrl + clubId;
+            var clubUrl = apiUrl + clubId;
             return await GetStringAsync(clubUrl);
         }
 
         // Given a club ID, generate the appropriate URL and get the championship data
         public async Task<Tuple<HttpStatusCode, string>> GetChampionshipInfo(string clubId)
         {
-            // example URL https://dirtrally2.com/api/Club/183582/championships
+            // example URL https://dirtrally2.dirtgame.com/api/Club/183582/championships
 
-            var baseUrl = "https://dirtrally2.com/api/Club/{0}/championships";
+            var apiUrl = baseUrl + "/api/Club/{0}/championships";
 
             // no need to make a http call with a known bad club ID
             if (String.IsNullOrWhiteSpace(clubId))
                 return new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, null);
 
             // create URL and query API
-            var champUrl = String.Format(baseUrl, clubId);
+            var champUrl = String.Format(apiUrl, clubId);
             return await GetStringAsync(champUrl);
         }
 
         // Given a club ID, get the recent results
         public async Task<Tuple<HttpStatusCode, string>> GetRecentResults(string clubId)
         {
-            // example URL https://dirtrally2.com/api/Club/183582/recentResults
-            var baseUrl = "https://dirtrally2.com/api/Club/{0}/recentResults";
+            // example URL https://dirtrally2.dirtgame.com/api/Club/183582/recentResults
+            var apiUrl = baseUrl + "/api/Club/{0}/recentResults";
 
             // no need to make a http call with a known bad club ID
             if (String.IsNullOrWhiteSpace(clubId))
                 return new Tuple<HttpStatusCode, string>(HttpStatusCode.NotFound, null);
 
             // create URL and query API
-            var recentResultsUrl = String.Format(baseUrl, clubId);
+            var recentResultsUrl = String.Format(apiUrl, clubId);
             return await GetStringAsync(recentResultsUrl);
         }
 
@@ -115,7 +117,7 @@ namespace DR2Rallymaster.Services
             while (true)
             {
                 var requestPayload = String.Format(baseRequestPayload, challengeId, stageId, currentPage, eventId);
-                var leaderboardUrl = "https://dirtrally2.com/api/Leaderboard";
+                var leaderboardUrl = baseUrl + "/api/Leaderboard";
                 var response = await PostStringAsync(leaderboardUrl, requestPayload);
 
                 // process a single page of data

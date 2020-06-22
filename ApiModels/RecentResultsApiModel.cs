@@ -3,7 +3,7 @@
     // This represents the JSON result returned for the "recentResults" endpoint
     // Contains information about the recent events and what stages they contain
     // Example URL:
-    // https://dirtrally2.com/api/Club/183582/recentResults
+    // https://dirtrally2.dirtgame.com/api/Club/183582/recentResults
     // no params
 
     public class RecentResultsApiModel

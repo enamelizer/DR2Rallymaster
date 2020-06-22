@@ -3,7 +3,7 @@
     // Represents the JSON result returned from the "Leaderboard" endpoint
     // Contains all the drivers and times for the event
     // Example URL:
-    // https://dirtrally2.com/api/Leaderboard
+    // https://dirtrally2.dirtgame.com/api/Leaderboard
     //
     // Example params (JSON):
     //{"challengeId":"11453","selectedEventId":0,"stageId":"6","page":1,"pageSize":100,"orderByTotalTime":true,"platformFilter":"None","playerFilter":"Everyone","filterByAssists":"Unspecified","filterByWheel":"Unspecified","nationalityFilter":"None","eventId":"11615"}
